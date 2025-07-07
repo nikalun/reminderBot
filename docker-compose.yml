@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  reminder:
+    build: .
+    container_name: reminder_bot
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/db/
+    environment:
+      - API_KEY_BOT=${API_KEY_BOT}
+      - ADMIN_ID=${ADMIN_ID}
+      - DAILY_TIME=${DAILY_TIME}
+      - CHOOSE_HOST_TIME=${CHOOSE_HOST_TIME}
+      - CLOSE_TASKS_TIME=${CLOSE_TASKS_TIME}
+      - DELETE_OLD_VACATIONS=${DELETE_OLD_VACATIONS}
+      - CHAT_ID=${CHAT_ID}
+      - DAILY_URL=${DAILY_URL}
+      - DATA_BASE_NAME=${DATA_BASE_NAME}
+      - EASTER_EGG_NICKNAME=${EASTER_EGG_NICKNAME}

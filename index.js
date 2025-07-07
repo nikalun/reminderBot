@@ -1,0 +1,17 @@
+require('dotenv').config();
+
+require('./services/bot.service');
+require('./services/dataBase.service');
+const JobsService = require('./services/jobs.service');
+
+const jobsService = new JobsService();
+
+const dailyJob = jobsService.dailyJob();
+const hostJob = jobsService.hostJob();
+const closeTasksJob = jobsService.closeTasks();
+const deleteOldVacationsJob = jobsService.deleteOldVacations();
+
+dailyJob.start();
+hostJob.start();
+closeTasksJob.start();
+deleteOldVacationsJob.start();

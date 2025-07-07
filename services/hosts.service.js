@@ -1,0 +1,58 @@
+const dataBaseService = require('./dataBase.service');
+
+class HostsService {
+    async setHost(userId, userName, chatId) {
+        return await dataBaseService.setHost(userId, userName, chatId);
+    }
+
+    async setPrevHost(userId, value) {
+        return await dataBaseService.updatePrevHost(userId, value);
+    }
+
+    async findHost(userId) {
+        return await dataBaseService.selectHost(userId);
+    }
+
+    async hosts() {
+        return await dataBaseService.getHosts();
+    }
+
+    async vacations() {
+        return await dataBaseService.getVacations();
+    }
+
+    async randomHost() {
+        try {
+            const hostsWithoutPrevAndVacations = await this.hostsWithoutPrevAndVacations();
+            const hosts = await this.hosts();
+            const randomHost = hostsWithoutPrevAndVacations[Math.floor(Math.random() * hostsWithoutPrevAndVacations.length)];
+
+            if (randomHost) {
+                for (const item of hosts) {
+                    if (item.prev_host) {
+                        await this.setPrevHost(item.user_id, '');
+                    }
+                }
+                await this.setPrevHost(randomHost.user_id, 'true');
+            }
+
+            return randomHost;
+        } catch (e) {
+            console.log(`Ошибка в методе randomHost ${e}`);
+        }
+    }
+
+    async hostsWithoutPrevAndVacations() {
+        try {
+            const hosts = await this.hosts();
+            const vacations = await this.vacations();
+            const vacationIds = new Set(vacations.map(item => item.user_id));
+
+            return hosts.filter(item => item.prev_host !== 'true' && !vacationIds.has(item.user_id))
+        } catch (e) {
+            console.log(`Ошибка в методе hostsWithoutPrev ${e}`);
+        }
+    }
+}
+
+module.exports = HostsService;

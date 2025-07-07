@@ -1,0 +1,22 @@
+{
+  "name": "reminder",
+  "version": "1.0.0",
+  "description": "Reminder bot for command",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Nikolay Lukinych",
+  "license": "ISC",
+  "dependencies": {
+    "cron": "^4.3.1",
+    "dotenv": "^16.5.0",
+    "luxon": "^3.6.1",
+    "node-telegram-bot-api": "^0.66.0",
+    "sqlite3": "^5.1.7",
+    "telegram-inline-calendar": "^1.10.0"
+  },
+  "devDependencies": {
+    "@types/node-telegram-bot-api": "^0.64.9"
+  }
+}
