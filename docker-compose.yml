@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   reminder:
     build: .
@@ -8,7 +6,7 @@ services:
       - "3000:3000"
     restart: unless-stopped
     volumes:
-      - ./data:/app/db/
+      - ${PATH_TO_DB}:/app/db/
     environment:
       - API_KEY_BOT=${API_KEY_BOT}
       - ADMIN_ID=${ADMIN_ID}
