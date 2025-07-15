@@ -93,7 +93,7 @@ class BotService {
                             await this.bot.sendMessage(msg.chat.id, `Админ меню бота`, {
                                 reply_markup: {
                                     keyboard: [
-                                        ['Оповестить о дейли', 'Выбрать ведущего'],
+                                        ['Оповестить о дейли', 'Выбрать ведущего', 'Удалить отпуск'],
                                     ]
                                 }
                             })
@@ -135,6 +135,23 @@ class BotService {
                 case 'Выбрать ведущего': {
                     break;
                 }
+                case 'Удалить отпуск': {
+                     const vacations = await this._getVacations();
+
+                     if (vacations.length) {
+                         const users = vacations.map(item => ({ text: `@${item.user_name}`, callback_data: `delete_vacation:${item.user_id}:${item.end_date}` }));
+
+                         const options = {
+                             reply_markup: {
+                                 inline_keyboard: [users]
+                             }
+                         };
+
+                         await this.bot.sendMessage(msg.chat.id, 'Выбери, у кого хочешь удалить отпуск', options);
+                     } else {
+                         await this.bot.sendMessage(msg.chat.id, 'Никто не в отпуске, удалять нечего');
+                     }
+                }
                 default:
                     break;
             }
@@ -142,7 +159,6 @@ class BotService {
 
         this.bot.on('callback_query', async (query) => {
             const isCalendarMessage = query.message.message_id == this.calendar.chats.get(query.message.chat.id);
-
             if (isCalendarMessage) {
                 const res = this.calendar.clickButtonCalendar(query);
                 if (res !== -1) {
@@ -166,6 +182,7 @@ class BotService {
                 }
             }
 
+
             switch (query.data) {
                 case 'start_date': {
                     const data = await this._checkVacation(query.message);
@@ -182,6 +199,20 @@ class BotService {
                         this.calendar.startNavCalendar(this.msg);
                     }
                     break;
+                }
+            }
+
+            switch (true) {
+                case /^delete_vacation:\d+:\d{2}-\d{2}-\d{4}$/.test(query.data): {
+                    const [_, userId, endDate] = query.data.split(':');
+
+                    try {
+                        await dataBaseService.deleteVacation(userId, endDate);
+                        await this.bot.sendMessage(query.message.chat.id, `Успешно удалён отпуск ${userId} из базы`);
+                    } catch (e) {
+                        await this.bot.sendMessage(query.message.chat.id, `Ошибка удаление отпуска ${userId} из базы`);
+                        console.log(`Ошибка при удалении отпуска сотрудника ${userId} ${e}`);
+                    }
                 }
             }
         })
@@ -203,7 +234,7 @@ class BotService {
 
     async _checkVacation(query) {
         try {
-            const data = await dataBaseService.getVacations();
+            const data = await this._getVacations();
             const currentUser = data?.filter((item) => item.user_id === query.chat.id);
 
             if (currentUser.length) {
@@ -214,6 +245,15 @@ class BotService {
             return true;
         } catch (e) {
             console.log('Ошибка получения данных из базы ' + e);
+        }
+    }
+
+    async _getVacations() {
+        try {
+            const data = await dataBaseService.getVacations();
+            return data;
+        } catch (e) {
+            console.log('Ошибка получения данных отпускников из базы ' + e);
         }
     }
 
