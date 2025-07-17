@@ -44,14 +44,34 @@ class HostsService {
 
     async hostsWithoutPrevAndVacations() {
         try {
+            return await this.hostsWithoutVacations(true);
+        } catch (e) {
+            console.log(`Ошибка в методе hostsWithoutPrev ${e}`);
+        }
+    }
+
+    async hostsWithoutVacations(withoutPrevHost = false) {
+        try {
             const hosts = await this.hosts();
             const vacations = await this.vacations();
             const vacationIds = new Set(vacations.map(item => item.user_id));
 
-            return hosts.filter(item => item.prev_host !== 'true' && !vacationIds.has(item.user_id))
+            return hosts.filter(item => {
+                const withoutVacations = !vacationIds.has(item.user_id);
+                if (withoutPrevHost) {
+                    return item.prev_host !== 'true' && withoutVacations;
+                }
+
+                return withoutVacations;
+            })
         } catch (e) {
-            console.log(`Ошибка в методе hostsWithoutPrev ${e}`);
+            console.log(`Ошибка в методе hostsWithoutVacations ${e}`);
         }
+    }
+
+    async prevHost() {
+        const hosts = await this.hosts();
+        return hosts.filter(host => host.prev_host === 'true');
     }
 }
 

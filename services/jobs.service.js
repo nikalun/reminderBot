@@ -9,6 +9,9 @@ const dailyStickersPath = `${stickersPath}/daily`;
 const easterEggSticker = `${stickersPath}/easter_egg/easter_egg.webp`;
 const easterEggVoice = `${basePath}/voices/peasantwhat3.mp3`;
 const dailyStickers = fs.readdirSync(dailyStickersPath);
+const hello = `${stickersPath}/boo.gif`;
+
+const gifStream = fs.createReadStream(hello);
 
 const randomDailySticker = dailyStickers[Math.floor(Math.random() * dailyStickers.length)];
 const randomDailyStickerPath = `${dailyStickersPath}/${randomDailySticker}`;
@@ -48,6 +51,15 @@ class JobsService {
         });
     }
 
+    youAreHost() {
+        return cronService.createJob({
+            cronTime: process.env.DUTY_REMINDER_TIME,
+            onTick: this._youAreHost,
+            start: true,
+            timeZone: 'Europe/Moscow',
+        });
+    }
+
     hostJob() {
         return cronService.createJob({
             cronTime: process.env.CHOOSE_HOST_TIME,
@@ -75,6 +87,18 @@ class JobsService {
          });
      }
 
+     async _youAreHost() {
+        try {
+            const currentHost = await hostsService.prevHost();
+            console.log(currentHost[0].user_id)
+            await bot.sendAnimation(currentHost[0].user_id, gifStream, {
+                caption: 'Бу! Ты сегодня ведущий.',
+            });
+        } catch (e) {
+            console.log(`Ошибка отправки сообщения пользователю, что он ведущий - ${e}`);
+        }
+     }
+
      async _deleteOldVacationsTick() {
          const data = await dataBaseService.getVacations();
 
@@ -91,7 +115,7 @@ class JobsService {
                      await dataBaseService.deleteVacation(item.user_id, item.end_date);
                      console.log('Успешно удалён отпуск у ' + item.user_id);
                  } catch (e) {
-                     await this.bot.sendMessage(process.env.CHAT_ID, `Ошибка удаление отпуска @${item.user_name} из базы`);
+                     await bot.sendMessage(process.env.CHAT_ID, `Ошибка удаление отпуска @${item.user_name} из базы`);
                      console.log(`Ошибка при удалении отпуска сотрудника ${item.user_name} ${e}`);
                  }
              }
@@ -100,7 +124,10 @@ class JobsService {
 
     async _dailyTick() {
         try {
+            const teamList = await hostsService.hostsWithoutVacations();
+            const teamString = teamList.map(item => `@${item.user_name}`).join(', ');
             await bot.sendMessage(process.env.CHAT_ID, `Доброе утро! Дейли - ${process.env.DAILY_URL}`);
+            await bot.sendMessage(process.env.CHAT_ID, teamString);
             await bot.sendSticker(process.env.CHAT_ID, randomDailyStickerPath);
         } catch (e) {
             console.log('Ошибка отправки сообщения о том, что нужно идти на дейлм', e);
