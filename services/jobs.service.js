@@ -90,8 +90,8 @@ class JobsService {
      async _youAreHost() {
         try {
             const currentHost = await hostsService.prevHost();
-            console.log(currentHost[0].user_id)
-            await bot.sendAnimation(currentHost[0].user_id, gifStream, {
+            await bot.sendMessage(process.env.CHAT_ID, `⚡️⚡️⚡️Сегодня дейли ведёт @${currentHost[0].user_name} ⚡️⚡️⚡️`);
+            await bot.sendDocument(currentHost[0].user_id, gifStream, {
                 caption: 'Бу! Ты сегодня ведущий.',
             });
         } catch (e) {
@@ -126,8 +126,7 @@ class JobsService {
         try {
             const teamList = await hostsService.hostsWithoutVacations();
             const teamString = teamList.map(item => `@${item.user_name}`).join(', ');
-            await bot.sendMessage(process.env.CHAT_ID, `Доброе утро! Дейли - ${process.env.DAILY_URL}`);
-            await bot.sendMessage(process.env.CHAT_ID, teamString);
+            await bot.sendMessage(process.env.CHAT_ID, `Доброе утро! Дейли - ${process.env.DAILY_URL}\n${teamString}`);
             await bot.sendSticker(process.env.CHAT_ID, randomDailyStickerPath);
         } catch (e) {
             console.log('Ошибка отправки сообщения о том, что нужно идти на дейлм', e);

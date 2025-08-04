@@ -38,7 +38,11 @@ class BotService {
 
     initialize() {
         this.bot = new TelegramBot(process.env.API_KEY_BOT, {
-            polling: true
+            polling: true,
+        });
+
+        this.bot.on('polling_error', (err) => {
+            console.error('Polling error:', err.code, err.message);
         });
 
         this.calendar = new Calendar(this.bot, {
