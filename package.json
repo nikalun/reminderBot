@@ -4,7 +4,9 @@
   "description": "Reminder bot for command",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "add-migrations": "node scripts/migrate.js",
+    "enrich-data": "node scripts/enrichDataBase.js"
   },
   "author": "Nikolay Lukinych",
   "license": "ISC",

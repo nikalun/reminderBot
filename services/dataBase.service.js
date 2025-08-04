@@ -11,7 +11,9 @@ const SQLRequests = new Map([
     ['insertHost', `INSERT INTO hosts (user_id, user_name, chat_id) VALUES (?, ?, ?)`],
     ['selectHosts', `SELECT * FROM hosts`],
     ['updatePrevHost', `UPDATE hosts SET prev_host = ? WHERE user_id = ?`],
+    ['enrichHost', `UPDATE hosts SET first_name = ?, last_name = ? WHERE user_id = ?`],
     ['selectHost', `SELECT * FROM hosts WHERE user_id = ?`],
+    ['selectHostIds', `SELECT user_id FROM hosts`],
 ])
 
 class DataBaseService {
@@ -30,8 +32,18 @@ class DataBaseService {
         return await run;
     }
 
+    async getHostIds() {
+        const all = this._all();
+        return await all(SQLRequests.get('selectHostIds'));
+    }
+
     async updatePrevHost(userId, value) {
         const run = this._run(SQLRequests.get('updatePrevHost'), [value, userId]);
+        return await run;
+    }
+
+    async enrichHost(userId, firstName, lastName) {
+        const run = this._run(SQLRequests.get('enrichHost'), [firstName, lastName, userId]);
         return await run;
     }
 

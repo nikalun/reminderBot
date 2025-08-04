@@ -1,0 +1,2 @@
+ALTER TABLE hosts ADD COLUMN first_name TEXT;
+ALTER TABLE hosts ADD COLUMN last_name TEXT;
