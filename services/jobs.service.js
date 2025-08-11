@@ -11,8 +11,6 @@ const easterEggVoice = `${basePath}/voices/peasantwhat3.mp3`;
 const dailyStickers = fs.readdirSync(dailyStickersPath);
 const hello = `${stickersPath}/boo.gif`;
 
-const gifStream = fs.createReadStream(hello);
-
 const randomDailySticker = dailyStickers[Math.floor(Math.random() * dailyStickers.length)];
 const randomDailyStickerPath = `${dailyStickersPath}/${randomDailySticker}`;
 
@@ -91,8 +89,27 @@ class JobsService {
         try {
             const currentHost = await hostsService.prevHost();
             await bot.sendMessage(process.env.CHAT_ID, `⚡️⚡️⚡️Сегодня дейли ведёт @${currentHost[0].user_name} ⚡️⚡️⚡️`);
-            await bot.sendDocument(currentHost[0].user_id, gifStream, {
-                caption: 'Бу! Ты сегодня ведущий.',
+
+            if (!fs.existsSync(hello)) {
+                console.error('❌ Гифка не найдена по пути:', hello);
+                return;
+            }
+
+            const gifStream = fs.createReadStream(hello);
+
+            gifStream.on('open', async () => {
+                try {
+                    await bot.sendAnimation(currentHost[0].user_id, gifStream, {
+                        caption: 'Бу! Ты сегодня ведущий.',
+                    });
+                    console.log('✅ Анимация успешно отправлена пользователю');
+                } catch (err) {
+                    console.error('❌ Ошибка отправки анимации:', err);
+                }
+            });
+
+            gifStream.on('error', (err) => {
+                console.error('❌ Ошибка чтения файла гифки:', err);
             });
         } catch (e) {
             console.log(`Ошибка отправки сообщения пользователю, что он ведущий - ${e}`);

@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 
-const filepath = path.join(__dirname, 'db', process.env.DATA_BASE_NAME);
+const filepath = path.join(__dirname, '..', 'db', process.env.DATA_BASE_NAME);
 
 const db = new sqlite3.Database(filepath);
 
@@ -15,7 +15,7 @@ db.serialize(() => {
 });
 
 function applyMigrations() {
-    const migrationDir = path.join(__dirname, 'migrations');
+    const migrationDir = path.join(__dirname, '..', 'migrations');
     const files = fs.readdirSync(migrationDir).sort();
 
     db.all('SELECT name FROM migrations', (err, rows) => {
