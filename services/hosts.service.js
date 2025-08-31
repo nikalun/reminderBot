@@ -9,6 +9,10 @@ class HostsService {
         return await dataBaseService.updatePrevHost(userId, value);
     }
 
+    async setHostedDaily(userId, value) {
+        return await dataBaseService.updateHostedDaily(userId, value);
+    }
+
     async findHost(userId) {
         return await dataBaseService.selectHost(userId);
     }
@@ -33,7 +37,11 @@ class HostsService {
                         await this.setPrevHost(item.user_id, '');
                     }
                 }
+                // Сколько раз вёл дейли
+                const count = ++randomHost.hosted_daily;
+
                 await this.setPrevHost(randomHost.user_id, 'true');
+                await this.setHostedDaily(randomHost.user_id, count);
             }
 
             return randomHost;

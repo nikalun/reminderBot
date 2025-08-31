@@ -1,0 +1,1 @@
+ALTER TABLE hosts ADD COLUMN hosted_daily INTEGER DEFAULT 0;
