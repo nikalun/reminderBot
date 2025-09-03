@@ -1,7 +1,3 @@
-require('dotenv').config();
-
-require('./services/bot.service');
-require('./services/dataBase.service');
 const JobsService = require('./services/jobs.service');
 
 const jobsService = new JobsService();

@@ -2,10 +2,13 @@ const TelegramBot = require('node-telegram-bot-api');
 const Calendar = require('telegram-inline-calendar');
 
 const HostsService = require('./hosts.service');
+const GeneralService = require('./general.service');
+
 const dataBaseService = require('./dataBase.service');
 const paths = require('../share/paths');
 
 const hostsService = new HostsService();
+const generalService = new GeneralService();
 
 const commands = [
     {
@@ -25,6 +28,15 @@ const commands = [
         description: "Меню администратора"
     }
 ];
+
+const adminKeyboard = [
+    ['Оповестить о дейли', 'Выбрать ведущего', 'Удалить отпуск'],
+];
+const dailyAlertKeyboard = [
+    ['Всех', 'Ведущего'],
+    ['⬅ Назад']
+];
+
 class BotService {
     startDate = '';
     endDate = '';
@@ -48,6 +60,7 @@ class BotService {
         });
 
         this.bot.setMyCommands(commands).then();
+        generalService.setBot(this.bot);
     }
 
     commandProcessing() {
@@ -66,9 +79,23 @@ class BotService {
                     break;
                 }
                 case 'Оповестить о дейли': {
+                    await this._sendButtonMarkup(msg, 'Выберите вариант:', dailyAlertKeyboard);
+                   break;
+                }
+                case 'Всех': {
+                    await generalService.daily();
+                    break;
+                }
+                case 'Ведущего': {
+                    await generalService.youAreHost();
+                    break;
+                }
+                case '⬅ Назад': {
+                    await this._adminMenuMarkup(msg);
                     break;
                 }
                 case 'Выбрать ведущего': {
+                    await generalService.chooseHost();
                     break;
                 }
                 case '/admin': {
@@ -106,16 +133,19 @@ class BotService {
         })
     }
 
+    async _sendButtonMarkup(msg, text, keyboard) {
+        await this.bot.sendMessage(msg.chat.id, text, {
+            reply_markup: {
+                keyboard,
+                resize_keyboard: true
+            }
+        })
+    }
+
     async _adminMenuMarkup(msg) {
         try {
             if (String(msg.chat.id) === process.env.ADMIN_ID) {
-                await this.bot.sendMessage(msg.chat.id, `Админ меню бота`, {
-                    reply_markup: {
-                        keyboard: [
-                            ['Оповестить о дейли', 'Выбрать ведущего', 'Удалить отпуск'],
-                        ]
-                    }
-                })
+                await this._sendButtonMarkup(msg, 'Админ меню бота', adminKeyboard);
             } else {
                 await this.bot.sendMessage(msg.chat.id, 'Тебе сюда нельзя!');
                 await this.bot.sendSticker(msg.chat.id, paths.stickers.iDontCallYou);
@@ -298,4 +328,4 @@ const botService = new BotService();
 botService.initialize();
 botService.commandProcessing();
 
-module.exports = botService.bot;
+module.exports = botService;
