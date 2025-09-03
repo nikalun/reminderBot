@@ -3,10 +3,7 @@ const Calendar = require('telegram-inline-calendar');
 
 const HostsService = require('./hosts.service');
 const dataBaseService = require('./dataBase.service');
-const path = require("path");
-
-const hostSticker = path.join(__dirname, '..', 'stickers', 'host.webp');
-const iDontCallYou = path.join(__dirname, '..', 'stickers', 'i_dont_call_you.webp');
+const paths = require('../share/paths');
 
 const hostsService = new HostsService();
 
@@ -121,7 +118,7 @@ class BotService {
                 })
             } else {
                 await this.bot.sendMessage(msg.chat.id, 'Тебе сюда нельзя!');
-                await this.bot.sendSticker(msg.chat.id, iDontCallYou);
+                await this.bot.sendSticker(msg.chat.id, paths.stickers.iDontCallYou);
             }
         } catch (e) {
             console.log(`Ошиба команды /admin ${e}`);
@@ -169,7 +166,7 @@ class BotService {
 
             if (currentUser.length) {
                 await this.bot.sendMessage(query.chat.id, 'У тебя уже есть отпуск, добавить второй до окончания первого - нельзя.');
-                await this.bot.sendSticker(query.chat.id, hostSticker);
+                await this.bot.sendSticker(query.chat.id, paths.stickers.host);
                 return false;
             }
             return true;

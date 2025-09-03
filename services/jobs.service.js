@@ -1,18 +1,6 @@
 const { DateTime } = require('luxon');
 const fs = require("fs");
-const path = require('path');
-
-const basePath = path.join(__dirname, '..');
-const stickersPath = `${basePath}/stickers`;
-const hostSticker = `${stickersPath}/host.webp`;
-const dailyStickersPath = `${stickersPath}/daily`;
-const easterEggSticker = `${stickersPath}/easter_egg/easter_egg.webp`;
-const easterEggVoice = `${basePath}/voices/peasantwhat3.mp3`;
-const dailyStickers = fs.readdirSync(dailyStickersPath);
-const hello = `${stickersPath}/boo.gif`;
-
-const randomDailySticker = dailyStickers[Math.floor(Math.random() * dailyStickers.length)];
-const randomDailyStickerPath = `${dailyStickersPath}/${randomDailySticker}`;
+const paths = require('../share/paths');
 
 const bot = require('./bot.service');
 const CronService = require('./cron.service');
@@ -88,14 +76,14 @@ class JobsService {
      async _youAreHost() {
         try {
             const currentHost = await hostsService.prevHost();
-            await bot.sendMessage(process.env.CHAT_ID, `⚡️⚡️⚡️Сегодня дейли ведёт @${currentHost[0].user_name} ⚡️⚡️⚡️`);
+            await bot.sendMessage(process.env.CHAT_ID, `⚡️Сегодня дейли ведёт @${currentHost[0].user_name} ⚡️`);
 
-            if (!fs.existsSync(hello)) {
-                console.error('❌ Гифка не найдена по пути:', hello);
+            if (!fs.existsSync(paths.stickers.hello)) {
+                console.error('❌ Гифка не найдена по пути:', paths.stickers.hello);
                 return;
             }
 
-            const gifStream = fs.createReadStream(hello);
+            const gifStream = fs.createReadStream(paths.stickers.hello);
 
             gifStream.on('open', async () => {
                 try {
@@ -144,7 +132,7 @@ class JobsService {
             const teamList = await hostsService.hostsWithoutVacations();
             const teamString = teamList.map(item => `@${item.user_name}`).join(', ');
             await bot.sendMessage(process.env.CHAT_ID, `Доброе утро! Дейли - ${process.env.DAILY_URL}\n${teamString}`);
-            await bot.sendSticker(process.env.CHAT_ID, randomDailyStickerPath);
+            await bot.sendSticker(process.env.CHAT_ID, paths.stickers.dailyRandomSticker);
         } catch (e) {
             console.log('Ошибка отправки сообщения о том, что нужно идти на дейлм', e);
         }
@@ -160,10 +148,10 @@ class JobsService {
                 if (randomHost) {
                     await bot.sendMessage(process.env.CHAT_ID, `${how} дейли ведёт @${randomHost.user_name}`);
                     if (randomHost.user_name === process.env.EASTER_EGG_NICKNAME) {
-                        await bot.sendSticker(process.env.CHAT_ID, easterEggSticker);
-                        await bot.sendVoice(process.env.CHAT_ID, easterEggVoice);
+                        await bot.sendSticker(process.env.CHAT_ID, paths.stickers.easterEgg);
+                        await bot.sendVoice(process.env.CHAT_ID, paths.voices.easterEgg);
                     } else {
-                        await bot.sendSticker(process.env.CHAT_ID, hostSticker);
+                        await bot.sendSticker(process.env.CHAT_ID, paths.stickers.host);
                     }
                 }
             } catch (e) {
