@@ -57,80 +57,15 @@ class BotService {
         this.bot.on('text', async msg => {
             switch (msg.text) {
                 case '/add': {
-                    try {
-                        const userId = msg.from.id;
-                        const username = msg.from.username;
-                        const chatId = msg.chat.id;
-
-                        const host = await hostsService.findHost(userId);
-
-                        if (host) {
-                            await this.bot.sendMessage(msg.chat.id, `Пользователь с ником @${username} уже существует`);
-                            break;
-                        }
-
-                        await hostsService.setHost(userId, username, chatId);
-
-                        if (msg.chat.id === process.env.CHAT_ID) {
-                            await this.bot.sendMessage(msg.chat.id, `Пользователь с ником @${username} добавлен в список ведущих дейли`);
-                        } else {
-                            await this.bot.sendMessage(msg.chat.id, `Пользователь с ником @${username} добавлен в список ведущих дейли`);
-                            await this.bot.sendMessage(process.env.CHAT_ID, `Пользователь с ником @${username} добавлен в список ведущих дейли`);
-                        }
-                    } catch (e) {
-                        console.log(`Ошибка добавления пользователя в списоке ведущих ${e}`);
-                        await this.bot.sendMessage(msg.chat.id, `Пользователь с ником @${username} не добавлен в базу.`);
-                    }
+                    await this._add(msg);
                     break;
                 }
                 case '/start': {
-                    try {
-                        await this.bot.sendMessage(msg.chat.id, 'Привет. Я бот, который позволяет сократить некоторую рутину. Посмотри меню, там написано, что я пока умею.');
-                    } catch (e) {
-                        console.log(`Ошиба команды /start ${e}`);
-                    }
-                    break;
-                }
-                case '/admin': {
-                    try {
-                        if (String(msg.chat.id) === process.env.ADMIN_ID) {
-                            await this.bot.sendMessage(msg.chat.id, `Админ меню бота`, {
-                                reply_markup: {
-                                    keyboard: [
-                                        ['Оповестить о дейли', 'Выбрать ведущего', 'Удалить отпуск'],
-                                    ]
-                                }
-                            })
-                        } else {
-                            await this.bot.sendMessage(msg.chat.id, 'Тебе сюда нельзя!');
-                            await this.bot.sendSticker(msg.chat.id, iDontCallYou);
-                        }
-                    } catch (e) {
-                        console.log(`Ошиба команды /admin ${e}`);
-                    }
+                    await this._start(msg);
                     break;
                 }
                 case '/vacation': {
-                    try {
-                        const data = await this._checkVacation(msg);
-
-                        if (data) {
-                            this.msg = msg;
-                            const options = {
-                                reply_markup: {
-                                    inline_keyboard: [
-                                        [
-                                            { text: 'Дата начала',  callback_data: 'start_date' },
-                                            { text: 'Дата конца', callback_data: 'end_date' }
-                                        ]
-                                    ]
-                                }
-                            };
-                            await this.bot.sendMessage(msg.chat.id, 'Выбор даты', options);
-                        }
-                    } catch (e) {
-                        console.log(`Ошибка команды /vacation ${e}`);
-                    }
+                    await this._vacation(msg);
                     break;
                 }
                 case 'Оповестить о дейли': {
@@ -139,22 +74,13 @@ class BotService {
                 case 'Выбрать ведущего': {
                     break;
                 }
+                case '/admin': {
+                    await this._adminMenuMarkup(msg);
+                    break;
+                }
                 case 'Удалить отпуск': {
-                     const vacations = await this._getVacations();
-
-                     if (vacations.length) {
-                         const users = vacations.map(item => ({ text: `@${item.user_name}`, callback_data: `delete_vacation:${item.user_id}:${item.end_date}` }));
-
-                         const options = {
-                             reply_markup: {
-                                 inline_keyboard: [users]
-                             }
-                         };
-
-                         await this.bot.sendMessage(msg.chat.id, 'Выбери, у кого хочешь удалить отпуск', options);
-                     } else {
-                         await this.bot.sendMessage(msg.chat.id, 'Никто не в отпуске, удалять нечего');
-                     }
+                     await this._deleteVacationMarkup(msg);
+                     break;
                 }
                 default:
                     break;
@@ -162,64 +88,64 @@ class BotService {
         });
 
         this.bot.on('callback_query', async (query) => {
-            const isCalendarMessage = query.message.message_id == this.calendar.chats.get(query.message.chat.id);
-            if (isCalendarMessage) {
-                const res = this.calendar.clickButtonCalendar(query);
-                if (res !== -1) {
-                    const moment = this.startFlag && !this.endFlag ? 'начала' : 'конца';
-                    if (this.startFlag && !this.endFlag) {
-                        this.startDate = res;
-                    } else if (this.endFlag) {
-                        this.endDate = res;
-                    }
-
-                    try {
-                        await this.bot.sendMessage(query.message.chat.id, `Вы выбрали дату ${moment} отпуска: ${res}`);
-
-                        if (this.startFlag && this.endFlag) {
-                            await this._addVacation(query);
-                        }
-                    } catch (e) {
-                        console.log('Ошибка выбора даты отпуска ' + e);
-                        await this.bot.sendMessage(query.message.chat.id, 'Что-то пошло не так, сохранить отпуск не удалось, обратись а админу.');
-                    }
-                }
-            }
-
+            this._calendarMessageProcessing(query).then();
 
             switch (query.data) {
                 case 'start_date': {
-                    const data = await this._checkVacation(query.message);
-                    if (data && this.msg) {
-                        this.startFlag = true;
-                        this.calendar.startNavCalendar(this.msg);
-                    }
+                    await this._startCalendar(query, 'startFlag');
                     break;
                 }
                 case 'end_date': {
-                    const data = await this._checkVacation(query.message);
-                    if (data && this.msg) {
-                        this.endFlag = true;
-                        this.calendar.startNavCalendar(this.msg);
-                    }
+                    await this._startCalendar(query, 'endFlag');
                     break;
                 }
             }
 
             switch (true) {
                 case /^delete_vacation:\d+:\d{2}-\d{2}-\d{4}$/.test(query.data): {
-                    const [_, userId, endDate] = query.data.split(':');
-
-                    try {
-                        await dataBaseService.deleteVacation(userId, endDate);
-                        await this.bot.sendMessage(query.message.chat.id, `Успешно удалён отпуск ${userId} из базы`);
-                    } catch (e) {
-                        await this.bot.sendMessage(query.message.chat.id, `Ошибка удаление отпуска ${userId} из базы`);
-                        console.log(`Ошибка при удалении отпуска сотрудника ${userId} ${e}`);
-                    }
+                    await this._deleteVacation(query);
                 }
             }
         })
+    }
+
+    async _adminMenuMarkup(msg) {
+        try {
+            if (String(msg.chat.id) === process.env.ADMIN_ID) {
+                await this.bot.sendMessage(msg.chat.id, `Админ меню бота`, {
+                    reply_markup: {
+                        keyboard: [
+                            ['Оповестить о дейли', 'Выбрать ведущего', 'Удалить отпуск'],
+                        ]
+                    }
+                })
+            } else {
+                await this.bot.sendMessage(msg.chat.id, 'Тебе сюда нельзя!');
+                await this.bot.sendSticker(msg.chat.id, iDontCallYou);
+            }
+        } catch (e) {
+            console.log(`Ошиба команды /admin ${e}`);
+        }
+    }
+
+    async _deleteVacation(query) {
+        const [_, userId, endDate] = query.data.split(':');
+
+        try {
+            await dataBaseService.deleteVacation(userId, endDate);
+            await this.bot.sendMessage(query.message.chat.id, `Успешно удалён отпуск ${userId} из базы`);
+        } catch (e) {
+            await this.bot.sendMessage(query.message.chat.id, `Ошибка удаление отпуска ${userId} из базы`);
+            console.log(`Ошибка при удалении отпуска сотрудника ${userId} ${e}`);
+        }
+    }
+
+    async _startCalendar(query, flag) {
+        const data = await this._checkVacation(query.message);
+        if (data && this.msg) {
+            this[flag] = true;
+            this.calendar.startNavCalendar(this.msg);
+        }
     }
 
     async _addVacation(query) {
@@ -266,6 +192,108 @@ class BotService {
         this.endFlag = false;
         this.startDate = '';
         this.endDate = '';
+    }
+
+    async _add(msg) {
+        const username = msg.from.username;
+        try {
+            const userId = msg.from.id;
+            const chatId = msg.chat.id;
+
+            const host = await hostsService.findHost(userId);
+
+            if (host) {
+                await this.bot.sendMessage(msg.chat.id, `Пользователь с ником @${username} уже существует`);
+                return;
+            }
+
+            await hostsService.setHost(userId, username, chatId);
+
+            if (msg.chat.id === process.env.CHAT_ID) {
+                await this.bot.sendMessage(msg.chat.id, `Пользователь с ником @${username} добавлен в список ведущих дейли`);
+            } else {
+                await this.bot.sendMessage(msg.chat.id, `Пользователь с ником @${username} добавлен в список ведущих дейли`);
+                await this.bot.sendMessage(process.env.CHAT_ID, `Пользователь с ником @${username} добавлен в список ведущих дейли`);
+            }
+        } catch (e) {
+            console.log(`Ошибка добавления пользователя в списоке ведущих ${e}`);
+            await this.bot.sendMessage(msg.chat.id, `Пользователь с ником @${username} не добавлен в базу.`);
+        }
+    }
+
+    async _start(msg) {
+        try {
+            await this.bot.sendMessage(msg.chat.id, 'Привет. Я бот, который позволяет сократить некоторую рутину. Посмотри меню, там написано, что я пока умею.');
+        } catch (e) {
+            console.log(`Ошиба команды /start ${e}`);
+        }
+    }
+
+    async _vacation(msg) {
+        try {
+            const data = await this._checkVacation(msg);
+
+            if (data) {
+                this.msg = msg;
+                const options = {
+                    reply_markup: {
+                        inline_keyboard: [
+                            [
+                                { text: 'Дата начала',  callback_data: 'start_date' },
+                                { text: 'Дата конца', callback_data: 'end_date' }
+                            ]
+                        ]
+                    }
+                };
+                await this.bot.sendMessage(msg.chat.id, 'Выбор даты', options);
+            }
+        } catch (e) {
+            console.log(`Ошибка команды /vacation ${e}`);
+        }
+    }
+
+    async _deleteVacationMarkup(msg) {
+        const vacations = await this._getVacations();
+
+        if (vacations.length) {
+            const users = vacations.map(item => ({ text: `@${item.user_name}`, callback_data: `delete_vacation:${item.user_id}:${item.end_date}` }));
+
+            const options = {
+                reply_markup: {
+                    inline_keyboard: [users]
+                }
+            };
+
+            await this.bot.sendMessage(msg.chat.id, 'Выбери, у кого хочешь удалить отпуск', options);
+        } else {
+            await this.bot.sendMessage(msg.chat.id, 'Никто не в отпуске, удалять нечего');
+        }
+    }
+
+    async _calendarMessageProcessing(query) {
+        const isCalendarMessage = query.message.message_id == this.calendar.chats.get(query.message.chat.id);
+        if (isCalendarMessage) {
+            const res = this.calendar.clickButtonCalendar(query);
+            if (res !== -1) {
+                const moment = this.startFlag && !this.endFlag ? 'начала' : 'конца';
+                if (this.startFlag && !this.endFlag) {
+                    this.startDate = res;
+                } else if (this.endFlag) {
+                    this.endDate = res;
+                }
+
+                try {
+                    await this.bot.sendMessage(query.message.chat.id, `Вы выбрали дату ${moment} отпуска: ${res}`);
+
+                    if (this.startFlag && this.endFlag) {
+                        await this._addVacation(query);
+                    }
+                } catch (e) {
+                    console.log('Ошибка выбора даты отпуска ' + e);
+                    await this.bot.sendMessage(query.message.chat.id, 'Что-то пошло не так, сохранить отпуск не удалось, обратись а админу.');
+                }
+            }
+        }
     }
 }
 
