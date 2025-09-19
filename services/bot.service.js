@@ -6,6 +6,7 @@ const GeneralService = require('./general.service');
 
 const dataBaseService = require('./dataBase.service');
 const paths = require('../share/paths');
+const { decodeCallbackData, encodeCallbackData } = require('../share/helpers');
 
 const hostsService = new HostsService();
 const generalService = new GeneralService();
@@ -126,7 +127,7 @@ class BotService {
             }
 
             switch (true) {
-                case /^delete_vacation:\d+:\d{2}-\d{2}-\d{4}$/.test(query.data): {
+                case /^delete_vacation:/.test(query.data): {
                     await this._deleteVacation(query);
                 }
             }
@@ -156,14 +157,16 @@ class BotService {
     }
 
     async _deleteVacation(query) {
-        const [_, userId, endDate] = query.data.split(':');
+        const [_, data] = query.data.split(':');
+        const encodeData = decodeCallbackData(data);
+        const name = encodeData?.name;
 
         try {
-            await dataBaseService.deleteVacation(userId, endDate);
-            await this.bot.sendMessage(query.message.chat.id, `Успешно удалён отпуск ${userId} из базы`);
+            await dataBaseService.deleteVacation(encodeData.user_id, encodeData.end_date);
+            await this.bot.sendMessage(query.message.chat.id, `Успешно удалён отпуск ${name} из базы`);
         } catch (e) {
-            await this.bot.sendMessage(query.message.chat.id, `Ошибка удаление отпуска ${userId} из базы`);
-            console.log(`Ошибка при удалении отпуска сотрудника ${userId} ${e}`);
+            await this.bot.sendMessage(query.message.chat.id, `Ошибка удаление отпуска ${name} из базы`);
+            console.log(`Ошибка при удалении отпуска сотрудника ${name} ${e}`);
         }
     }
 
@@ -282,8 +285,22 @@ class BotService {
     async _deleteVacationMarkup(msg) {
         const vacations = await this._getVacations();
 
+        const preparedVacations = [];
+
+        for (const item of vacations) {
+            const user = await hostsService.findHost(item.user_id);
+            const firstName = user.first_name ? user.first_name : '';
+            const lastName = user.last_name ? user.last_name : '';
+            const name = `${firstName} ${lastName} (@${item.user_name})`;
+
+            preparedVacations.push({ name, data: { ...user, end_date: item.end_date }, });
+        }
+
         if (vacations.length) {
-            const users = vacations.map(item => ({ text: `@${item.user_name}`, callback_data: `delete_vacation:${item.user_id}:${item.end_date}` }));
+            const users = preparedVacations.map(item => ({
+                text: item.name,
+                callback_data: `delete_vacation:${encodeCallbackData({ name: item.name, ...item.data })}`
+            }));
 
             const options = {
                 reply_markup: {
