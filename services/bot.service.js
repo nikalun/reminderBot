@@ -80,6 +80,11 @@ class BotService {
                 || adminKeyboard[0].includes(text)
                 || dailyAlertKeyboard[0].includes(text)
                 || dailyAlertKeyboard[1].includes(text);
+            const isMember = this._checkMember(msg);
+
+            if (!isMember) {
+                return this.bot.sendMessage(msg.chat.id, '⛔ Ты не состоишь в группе, где разрешено выполнять команды');
+            }
 
             if (isCommand) {
                 const command = match?.[1] ?? text;
@@ -178,6 +183,11 @@ class BotService {
                 }
             }
         })
+    }
+
+    async _checkMember(msg) {
+        const member = await this.bot.getChatMember(process.env.CHAT_ID, msg.from.id);
+        return member.status === 'left' || member.status === 'kicked';
     }
 
     async _sendButtonMarkup(msg, text, keyboard) {
