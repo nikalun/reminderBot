@@ -11,6 +11,8 @@ const { decodeCallbackData, encodeCallbackData } = require('../share/helpers');
 const hostsService = new HostsService();
 const generalService = new GeneralService();
 
+const regex = /^\/([a-zA-Z0-9_]+)(?:@[\w\d_]+)?(?:\s+(.+))?$/;
+
 const commands = [
     {
         command: "start",
@@ -23,6 +25,10 @@ const commands = [
     {
         command: "vacation",
         description: "Пойти в отпуск"
+    },
+    {
+        command: "on_vacation",
+        description: "Узнать, кто в отпуске"
     },
     {
         command: "admin",
@@ -66,49 +72,89 @@ class BotService {
 
     commandProcessing() {
         this.bot.on('text', async msg => {
-            switch (msg.text) {
-                case '/add': {
-                    await this._add(msg);
-                    break;
+            const chatType = msg.chat.type;
+            const text = msg.text ?? '';
+
+            const match = text.match(regex);
+            const isCommand = match?.[1]
+                || adminKeyboard[0].includes(text)
+                || dailyAlertKeyboard[0].includes(text)
+                || dailyAlertKeyboard[1].includes(text);
+
+            if (isCommand) {
+                const command = match?.[1] ?? text;
+                const isChatGroup = chatType === 'group';
+
+                switch (command) {
+                    case 'add': {
+                        if (!isChatGroup) {
+                            await this._add(msg);
+                        } else {
+                            await this.bot.sendMessage(msg.chat.id, 'Эта команда работает только в личном чате со мной.');
+                        }
+                        break;
+                    }
+                    case 'start': {
+                        if (!isChatGroup) {
+                            await this._start(msg);
+                        } else {
+                            await this.bot.sendMessage(msg.chat.id, 'Эта команда работает только в личном чате со мной.');
+                        }
+                        break;
+                    }
+                    case 'vacation': {
+                        if (!isChatGroup) {
+                            await this._vacation(msg);
+                        } else {
+                            await this.bot.sendMessage(msg.chat.id, 'Эта команда работает только в личном чате со мной.');
+                        }
+                        break;
+                    }
+                    case 'on_vacation': {
+                        if (isChatGroup) {
+                            const data = await generalService.onVacationUsersData();
+                            const vacations = data
+                                .map(item => `${item.name}: ${item.date}`)
+                                .join(',\n');
+
+                            await this.bot.sendMessage(msg.chat.id, `Сейчас в отпуске: \n${vacations}`);
+                            break;
+                        } else {
+                            await this.bot.sendMessage(msg.chat.id, 'Эта команда работает только в групповом чате.');
+                        }
+                        break;
+                    }
+                    case 'admin': {
+                        await this._adminMenuMarkup(msg);
+                        break;
+                    }
+                    case 'Оповестить о дейли': {
+                        await this._sendButtonMarkup(msg, 'Выберите вариант:', dailyAlertKeyboard);
+                        break;
+                    }
+                    case 'Всех': {
+                        await generalService.daily();
+                        break;
+                    }
+                    case 'Ведущего': {
+                        await generalService.youAreHost();
+                        break;
+                    }
+                    case '⬅ Назад': {
+                        await this._adminMenuMarkup(msg);
+                        break;
+                    }
+                    case 'Выбрать ведущего': {
+                        await generalService.chooseHost();
+                        break;
+                    }
+                    case 'Удалить отпуск': {
+                        await this._deleteVacationMarkup(msg);
+                        break;
+                    }
+                    default:
+                        break;
                 }
-                case '/start': {
-                    await this._start(msg);
-                    break;
-                }
-                case '/vacation': {
-                    await this._vacation(msg);
-                    break;
-                }
-                case 'Оповестить о дейли': {
-                    await this._sendButtonMarkup(msg, 'Выберите вариант:', dailyAlertKeyboard);
-                   break;
-                }
-                case 'Всех': {
-                    await generalService.daily();
-                    break;
-                }
-                case 'Ведущего': {
-                    await generalService.youAreHost();
-                    break;
-                }
-                case '⬅ Назад': {
-                    await this._adminMenuMarkup(msg);
-                    break;
-                }
-                case 'Выбрать ведущего': {
-                    await generalService.chooseHost();
-                    break;
-                }
-                case '/admin': {
-                    await this._adminMenuMarkup(msg);
-                    break;
-                }
-                case 'Удалить отпуск': {
-                     await this._deleteVacationMarkup(msg);
-                     break;
-                }
-                default:
-                    break;
             }
         });
 
@@ -194,7 +240,7 @@ class BotService {
 
     async _checkVacation(query) {
         try {
-            const data = await this._getVacations();
+            const data = await generalService.getVacations();
             const currentUser = data?.filter((item) => item.user_id === query.chat.id);
 
             if (currentUser.length) {
@@ -205,15 +251,6 @@ class BotService {
             return true;
         } catch (e) {
             console.log('Ошибка получения данных из базы ' + e);
-        }
-    }
-
-    async _getVacations() {
-        try {
-            const data = await dataBaseService.getVacations();
-            return data;
-        } catch (e) {
-            console.log('Ошибка получения данных отпускников из базы ' + e);
         }
     }
 
@@ -283,7 +320,7 @@ class BotService {
     }
 
     async _deleteVacationMarkup(msg) {
-        const vacations = await this._getVacations();
+        const vacations = await generalService.getVacations();
 
         const preparedVacations = [];
 

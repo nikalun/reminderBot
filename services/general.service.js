@@ -3,6 +3,7 @@ const fs = require('fs');
 const paths = require('../share/paths');
 const HostsService = require('./hosts.service');
 const DayOffService = require('./dayOff.service');
+const dataBaseService = require('./dataBase.service');
 
 const dayOffService = new DayOffService('https://isdayoff.ru/');
 const hostsService = new HostsService();
@@ -31,11 +32,21 @@ class GeneralService {
     async daily() {
         try {
             const teamList = await hostsService.hostsWithoutVacations();
+            const data = await this.onVacationUsersData();
+
+            const onVacationString = data.map(item => item.onlyName).join(',\n');
             const teamString = teamList.map(item => `@${item.user_name}`).join(', ');
-            await this.bot.sendMessage(process.env.CHAT_ID, `Доброе утро! Дейли - ${process.env.DAILY_URL}\n${teamString}`);
+
+            await this.bot.sendMessage(process.env.CHAT_ID, `Доброе утро! [Дейли](${process.env.DAILY_URL}) \n${teamString}`, {
+                parse_mode: 'Markdown'
+            });
+
+            if (onVacationString) {
+                await this.bot.sendMessage(process.env.CHAT_ID, `🌴🌴☀️Сегодня в отпуске ☀️🌴🌴:\n\n${onVacationString}`);
+            }
             await this.bot.sendSticker(process.env.CHAT_ID, paths.stickers.dailyRandomSticker);
         } catch (e) {
-            console.log('Ошибка отправки сообщения о том, что нужно идти на дейли', e);
+            console.log('GeneralService: Ошибка отправки сообщения о том, что нужно идти на дейли', e);
         }
     }
 
@@ -66,7 +77,7 @@ class GeneralService {
                 console.error('❌ Ошибка чтения файла гифки:', err);
             });
         } catch (e) {
-            console.log(`Ошибка отправки сообщения пользователю, что он ведущий - ${e}`);
+            console.log(`GeneralService: Ошибка отправки сообщения пользователю, что он ведущий - ${e}`);
         }
     }
 
@@ -87,7 +98,7 @@ class GeneralService {
                     }
                 }
             } catch (e) {
-                console.log('Ошибка отправки сообщения, выбранного ведущего дейли', e);
+                console.log('GeneralService: Ошибка отправки сообщения, выбранного ведущего дейли', e);
             }
         }
     }
@@ -96,8 +107,35 @@ class GeneralService {
         try {
             await this.bot.sendMessage(process.env.CHAT_ID, closeTasksText, { parse_mode: 'HTML' });
         } catch (e) {
-            console.log('Ошибка отправки сообщения о том, что нужно закрыть задачи', e);
+            console.log('GeneralService: Ошибка отправки сообщения о том, что нужно закрыть задачи', e);
         }
+    }
+
+    async getVacations() {
+        try {
+            const data = await dataBaseService.getVacations();
+            return data;
+        } catch (e) {
+            console.log('GeneralService: Ошибка получения данных отпускников из базы ' + e);
+        }
+    }
+
+    async onVacationUsersData() {
+        const vacations = await this.getVacations();
+        const data = [];
+
+        for (const item of vacations) {
+            const user = await hostsService.findHost(item.user_id);
+            const firstName = user.first_name ? user.first_name : '';
+            const lastName = user.last_name ? ` ${user.last_name}` : '';
+            const name = `${firstName}${lastName} (@${item.user_name})`;
+            const onlyName = `${firstName}${lastName}`;
+            const date = `с ${item.start_date} по ${item.end_date}`;
+
+            data.push({ name, onlyName, date });
+        }
+
+        return data;
     }
 }
 
