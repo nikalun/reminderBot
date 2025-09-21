@@ -34,7 +34,7 @@ class GeneralService {
             const teamList = await hostsService.hostsWithoutVacations();
             const data = await this.onVacationUsersData();
 
-            const onVacationString = data.map(item => item.onlyName).join(',\n');
+            const onVacationString = data.map((item, index) => `${index + 1}. ${item.onlyName}`).join('\n');
             const teamString = teamList.map(item => `@${item.user_name}`).join(', ');
 
             await this.bot.sendMessage(process.env.CHAT_ID, `Доброе утро! [Дейли](${process.env.DAILY_URL}) \n${teamString}`, {
