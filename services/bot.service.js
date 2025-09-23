@@ -88,7 +88,7 @@ class BotService {
 
             if (isCommand) {
                 const command = match?.[1] ?? text;
-                const isChatGroup = chatType === 'group';
+                const isChatGroup = chatType === 'group' || chatType === 'supergroup';
 
                 switch (command) {
                     case 'add': {
