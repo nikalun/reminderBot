@@ -90,6 +90,8 @@ class BotService {
                 const command = match?.[1] ?? text;
                 const isChatGroup = chatType === 'group';
 
+                console.log(chatType)
+
                 switch (command) {
                     case 'add': {
                         if (!isChatGroup) {
