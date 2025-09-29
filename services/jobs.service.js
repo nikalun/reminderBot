@@ -59,14 +59,14 @@ class JobsService {
          });
      }
 
-    chooseNewBotName() {
-        return cronService.createJob({
-            cronTime: process.env.CHOOSE_NEW_BOT_NAME_TIME,
-            onTick: () => generalService.chooseNewBotName(),
-            start: true,
-            timeZone: 'Europe/Moscow',
-        });
-    }
+    // chooseNewBotName() {
+    //     return cronService.createJob({
+    //         cronTime: process.env.CHOOSE_NEW_BOT_NAME_TIME,
+    //         onTick: () => generalService.chooseNewBotName(),
+    //         start: true,
+    //         timeZone: 'Europe/Moscow',
+    //     });
+    // }
 
      async _deleteOldVacationsTick() {
          const data = await dataBaseService.getVacations();
