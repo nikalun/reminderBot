@@ -190,8 +190,12 @@ class BotService {
     }
 
     async _checkMember(msg) {
-        const member = await this.bot.getChatMember(process.env.CHAT_ID, msg.from.id);
-        return member.status === 'left' || member.status === 'kicked';
+        try {
+            const member = await this.bot.getChatMember(process.env.CHAT_ID, msg.from.id);
+            return member.status === 'left' || member.status === 'kicked';
+        } catch (e) {
+            console.log(`Ошиба проверки пользователя в группе ${e}`);
+        }
     }
 
     async _sendButtonMarkup(msg, text, keyboard) {
