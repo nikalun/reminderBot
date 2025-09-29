@@ -41,7 +41,7 @@ class GeneralService {
             await this.bot.sendMessage(process.env.CHAT_ID, `‼️В прошлом месяце больше всех был(а) ведущим - ${name}.\n\n✨🔭 Астрологи объявили ${currentMonth} именем <b>${name}</b>.`, {
                 parse_mode: 'HTML',
             })
-            // await this.bot.setMyName({ name: `Выбери ${maxObj.first_name} ведущим` });
+            await this.bot.setMyName({ name: `Выбери ${maxObj.first_name} ведущим` });
             await this.bot.sendSticker(process.env.CHAT_ID, 'CAACAgIAAxkBAAIURmjS_tqTtz7JwCBcM9krif_OmHEzAAIzFAACh8YhSLgqPYszxtqjNgQ');
         } catch (e) {
             console.log('GeneralService: Ошибка выбора нового имени бота', e);
