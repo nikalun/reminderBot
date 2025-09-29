@@ -22,6 +22,9 @@ const closeTasksText = `
 Ты закрываешь задачи - ИТ лид счастлив. Ты этого не делаешь - ИТ лид делает тебе попаболь!
 `;
 
+// Список отпускных эмодзи
+emojis = ["🏖️", "🍹", "🌊", "🕶️", "🌺", "☀️", "🌴", "🍍", "🏝️", "🌸"]
+
 class GeneralService {
     bot = undefined;
 
@@ -53,10 +56,19 @@ class GeneralService {
             const teamList = await hostsService.hostsWithoutVacations();
             const data = await this.onVacationUsersData();
 
-            const onVacationString = data.map((item, index) => `${index + 1}. ${item.onlyName}`).join('\n');
+            const onVacationString = data.map((item) => {
+                const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+                return `${emoji} ${item.onlyName}\n`;
+            }).join(',').replace(',', '');
             const teamString = teamList.map(item => `@${item.user_name}`).join(', ');
+            const vacations = onVacationString.length ? `🌴 **Сегодня в отпуске:**\n\n${onVacationString}` : '';
 
-            await this.bot.sendMessage(process.env.CHAT_ID, `Доброе утро! [Дейли](${process.env.DAILY_URL}) \n${teamString}`, {
+            const message = `☀️ **Доброе утро!**\n
+🔗 **[Дейли](${process.env.DAILY_URL})**\n
+${teamString}\n
+${vacations}`;
+
+            await this.bot.sendMessage(process.env.CHAT_ID, message, {
                 parse_mode: 'Markdown'
             });
 
