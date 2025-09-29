@@ -37,7 +37,7 @@ const commands = [
 ];
 
 const adminKeyboard = [
-    ['Оповестить о дейли', 'Выбрать ведущего', 'Удалить отпуск'],
+    ['Оповестить о дейли', 'Выбрать ведущего', 'Удалить отпуск', 'Переименовать бота'],
 ];
 const dailyAlertKeyboard = [
     ['Всех', 'Ведущего'],
@@ -155,6 +155,10 @@ class BotService {
                     }
                     case 'Удалить отпуск': {
                         await this._deleteVacationMarkup(msg);
+                        break;
+                    }
+                    case 'Переименовать бота': {
+                        await generalService.chooseNewBotName();
                         break;
                     }
                     default:

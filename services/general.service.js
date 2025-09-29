@@ -29,6 +29,25 @@ class GeneralService {
         this.bot = bot;
     }
 
+    async chooseNewBotName() {
+        try {
+            const data = await dataBaseService.getHosts();
+            const maxObj = data.reduce((max, current) => {
+                return current.hosted_daily > max.hosted_daily ? current : max;
+            }, { hosted_daily: -Infinity });
+            const name = maxObj.first_name ?? maxObj.last_name;
+            const currentMonth = new Date().toLocaleDateString('ru', { month: 'long' });
+
+            await this.bot.sendMessage(process.env.CHAT_ID, `‼️В прошлом месяце больше всех был(а) ведущим - ${name}.\n\n✨🔭 Астрологи объявили ${currentMonth} именем <b>${name}</b>.`, {
+                parse_mode: 'HTML',
+            })
+            // await this.bot.setMyName({ name: `Выбери ${maxObj.first_name} ведущим` });
+            await this.bot.sendSticker(process.env.CHAT_ID, 'CAACAgIAAxkBAAIURmjS_tqTtz7JwCBcM9krif_OmHEzAAIzFAACh8YhSLgqPYszxtqjNgQ');
+        } catch (e) {
+            console.log('GeneralService: Ошибка выбора нового имени бота', e);
+        }
+    }
+
     async daily() {
         try {
             const teamList = await hostsService.hostsWithoutVacations();
