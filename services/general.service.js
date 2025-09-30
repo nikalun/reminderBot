@@ -71,10 +71,6 @@ ${vacations}`;
             await this.bot.sendMessage(process.env.CHAT_ID, message, {
                 parse_mode: 'Markdown'
             });
-
-            if (onVacationString) {
-                await this.bot.sendMessage(process.env.CHAT_ID, `🌴🌴☀️Сегодня в отпуске ☀️🌴🌴:\n\n${onVacationString}`);
-            }
             await this.bot.sendSticker(process.env.CHAT_ID, paths.stickers.dailyRandomSticker);
         } catch (e) {
             console.log('GeneralService: Ошибка отправки сообщения о том, что нужно идти на дейли', e);
