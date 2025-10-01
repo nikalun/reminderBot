@@ -42,6 +42,7 @@ class GeneralService {
             const name = maxObj.first_name ?? maxObj.last_name;
             const currentMonth = new Date().toLocaleDateString('ru', { month: 'long' });
 
+            await this.resetFieldHostedDaily();
             await this.bot.sendMessage(process.env.CHAT_ID, `‼️В прошлом месяце больше всех был(а) ведущим - ${name}.\n\n✨🔭 Астрологи объявили ${currentMonth} именем <b>${name}</b>.`, {
                 parse_mode: 'HTML',
             })
@@ -107,6 +108,10 @@ ${vacations}`;
         } catch (e) {
             console.log(`GeneralService: Ошибка отправки сообщения пользователю, что он ведущий - ${e}`);
         }
+    }
+
+    async resetFieldHostedDaily() {
+        await hostsService.resetFieldHostedDaily();
     }
 
     async chooseHost() {

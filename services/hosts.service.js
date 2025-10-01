@@ -50,6 +50,14 @@ class HostsService {
         }
     }
 
+    async resetFieldHostedDaily() {
+        const hosts = await this.hosts();
+
+        for (const item of hosts) {
+            await this.setHostedDaily(item.user_id, 0);
+        }
+    }
+
     async hostsWithoutPrevAndVacations() {
         try {
             return await this.hostsWithoutVacations(true);

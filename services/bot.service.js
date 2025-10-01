@@ -37,7 +37,7 @@ const commands = [
 ];
 
 const adminKeyboard = [
-    ['Оповестить о дейли', 'Выбрать ведущего', 'Удалить отпуск', 'Переименовать бота'],
+    ['Оповестить о дейли', 'Выбрать ведущего', 'Удалить отпуск', 'Переименовать бота', 'Обнулить hosted_daily'],
 ];
 const dailyAlertKeyboard = [
     ['Всех', 'Ведущего'],
@@ -165,6 +165,10 @@ class BotService {
                     }
                     case 'Переименовать бота': {
                         await generalService.chooseNewBotName();
+                        break;
+                    }
+                    case 'test': {
+                        await generalService.resetFieldHostedDaily();
                         break;
                     }
                     default:
