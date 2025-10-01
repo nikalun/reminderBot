@@ -1,6 +1,7 @@
 const fs = require('fs');
 
 const paths = require('../share/paths');
+const { escapeMarkdown } = require('../share/helpers');
 const HostsService = require('./hosts.service');
 const DayOffService = require('./dayOff.service');
 const dataBaseService = require('./dataBase.service');
@@ -58,18 +59,18 @@ class GeneralService {
 
             const onVacationString = data.map((item) => {
                 const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-                return `${emoji} ${item.onlyName}\n`;
-            }).join(',').replace(',', '');
-            const teamString = teamList.map(item => `@${item.user_name}`).join(', ');
-            const vacations = onVacationString.length ? `🌴 **Сегодня в отпуске:**\n\n${onVacationString}` : '';
+                return `${emoji} ${escapeMarkdown(item.onlyName)}\n`;
+            }).join('');
+            const teamString = teamList.map(item => `@${escapeMarkdown(item.user_name)}`).join(', ');
+            const vacations = onVacationString.length ? `🌴 *Сегодня в отпуске:*\n\n${onVacationString}` : '';
 
-            const message = `☀️ **Доброе утро!**\n
-🔗 **[Дейли](${process.env.DAILY_URL})**\n
+            const message = `☀️${escapeMarkdown("Доброе утро!")}\n
+🔗 *[Дейли](${escapeMarkdown(process.env.DAILY_URL)})*\n
 ${teamString}\n
 ${vacations}`;
 
             await this.bot.sendMessage(process.env.CHAT_ID, message, {
-                parse_mode: 'Markdown'
+                parse_mode: 'MarkdownV2'
             });
             await this.bot.sendSticker(process.env.CHAT_ID, paths.stickers.dailyRandomSticker);
         } catch (e) {

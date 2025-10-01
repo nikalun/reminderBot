@@ -30,7 +30,18 @@ function decodeCallbackData(data) {
     }
 }
 
+/**
+ * Экранирование символов для MarkdownV2
+ * @param text
+ * @returns {*}
+ */
+function escapeMarkdown(text) {
+    return text.replace(/([_*[\]()~`>#+\-=|{}.!])/g, '\\$1');
+}
+
+
 module.exports = {
     encodeCallbackData,
     decodeCallbackData,
+    escapeMarkdown,
 }
