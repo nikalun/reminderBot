@@ -167,7 +167,7 @@ class BotService {
                         await generalService.chooseNewBotName();
                         break;
                     }
-                    case 'test': {
+                    case 'Обнулить hosted_daily': {
                         await generalService.resetFieldHostedDaily();
                         break;
                     }
