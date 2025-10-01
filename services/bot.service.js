@@ -118,6 +118,12 @@ class BotService {
                     case 'on_vacation': {
                         if (isChatGroup) {
                             const data = await generalService.onVacationUsersData();
+
+                            if (!data.length) {
+                                await this.bot.sendMessage(msg.chat.id, `Никто не в отпуске`);
+                                return;
+                            }
+
                             const vacations = data
                                 .map(item => `${item.name}: ${item.date}`)
                                 .join(',\n');
