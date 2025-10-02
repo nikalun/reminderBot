@@ -1,7 +1,7 @@
 const fs = require('fs');
 
 const paths = require('../share/paths');
-const { escapeMarkdown } = require('../share/helpers');
+const { escapeMarkdown, isTodayBetween, getRandomVacationEmoji} = require('../share/helpers');
 const HostsService = require('./hosts.service');
 const DayOffService = require('./dayOff.service');
 const dataBaseService = require('./dataBase.service');
@@ -22,9 +22,6 @@ const closeTasksText = `
 
 Ты закрываешь задачи - ИТ лид счастлив. Ты этого не делаешь - ИТ лид делает тебе попаболь!
 `;
-
-// Список отпускных эмодзи
-emojis = ["🏖️", "🍹", "🌊", "🕶️", "🌺", "☀️", "🌴", "🍍", "🏝️", "🌸"]
 
 class GeneralService {
     bot = undefined;
@@ -58,10 +55,13 @@ class GeneralService {
             const teamList = await hostsService.hostsWithoutVacations();
             const data = await this.onVacationUsersData();
 
-            const onVacationString = data.map((item) => {
-                const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-                return `${emoji} ${escapeMarkdown(item.onlyName)}\n`;
-            }).join('');
+            const onVacationString = data
+                .map((item) => {
+                    const emoji = getRandomVacationEmoji();
+                    return `${emoji} ${escapeMarkdown(item.name)}\n`;
+                })
+                .join('');
+
             const teamString = teamList.map(item => `@${escapeMarkdown(item.user_name)}`).join(', ');
             const vacations = onVacationString.length ? `🌴 *Сегодня в отпуске:*\n\n${onVacationString}` : '';
 
@@ -159,13 +159,14 @@ ${vacations}`;
 
         for (const item of vacations) {
             const user = await hostsService.findHost(item.user_id);
-            const firstName = user.first_name ? user.first_name : '';
-            const lastName = user.last_name ? ` ${user.last_name}` : '';
-            const name = `${firstName}${lastName} (@${item.user_name})`;
-            const onlyName = `${firstName}${lastName}`;
-            const date = `с ${item.start_date} по ${item.end_date}`;
 
-            data.push({ name, onlyName, date });
+            if (isTodayBetween(item.start_date, item.end_date)) {
+                const firstName = user.first_name ? user.first_name : '';
+                const lastName = user.last_name ? ` ${user.last_name}` : '';
+                const name = `${firstName}${lastName}`;
+
+                data.push({ name, userName: item.user_name, startDate: item.start_date, endDate: item.end_date });
+            }
         }
 
         return data;

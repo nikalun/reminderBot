@@ -120,15 +120,24 @@ class BotService {
                             const data = await generalService.onVacationUsersData();
 
                             if (!data.length) {
-                                await this.bot.sendMessage(msg.chat.id, `Никто не в отпуске`);
+                                await this.bot.sendMessage(msg.chat.id, '✨ Никто не отдыхает, все в строю! 💪');
                                 return;
                             }
 
                             const vacations = data
-                                .map(item => `${item.name}: ${item.date}`)
-                                .join(',\n');
+                                .map(item => {
+                                    const name = escapeMarkdown(item.name);
+                                    const username = escapeMarkdown(item.userName);
+                                    const from = escapeMarkdown(item.startDate);
+                                    const to = escapeMarkdown(item.endDate);
+                                    const emoji = getRandomVacationEmoji();
+                                    return `${emoji} *${name}* ${username}\n📅 ${from} → ${to}\n\n`;
+                                })
+                                .join('');
 
-                            await this.bot.sendMessage(msg.chat.id, `Сейчас в отпуске: \n${vacations}`);
+                            await this.bot.sendMessage(msg.chat.id, `🌴 Сейчас в отпуске: \n\n${vacations}`, {
+                                parse_mode: 'MarkdownV2'
+                            });
                             break;
                         } else {
                             await this.bot.sendMessage(msg.chat.id, 'Эта команда работает только в групповом чате.');
