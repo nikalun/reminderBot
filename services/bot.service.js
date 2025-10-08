@@ -6,7 +6,12 @@ const GeneralService = require('./general.service');
 
 const dataBaseService = require('./dataBase.service');
 const paths = require('../share/paths');
-const { decodeCallbackData, encodeCallbackData } = require('../share/helpers');
+const {
+    decodeCallbackData,
+    encodeCallbackData,
+    getRandomVacationEmoji,
+    escapeMarkdown,
+} = require('../share/helpers');
 
 const hostsService = new HostsService();
 const generalService = new GeneralService();
