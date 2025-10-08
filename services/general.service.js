@@ -44,7 +44,7 @@ class GeneralService {
                 parse_mode: 'HTML',
             })
             await this.bot.setMyName({ name: `Выбери ${maxObj.first_name} ведущим` });
-            await this.bot.sendSticker(process.env.CHAT_ID, 'CAACAgIAAxkBAAIURmjS_tqTtz7JwCBcM9krif_OmHEzAAIzFAACh8YhSLgqPYszxtqjNgQ');
+            await this.bot.sendSticker(process.env.CHAT_ID, );
         } catch (e) {
             console.log('GeneralService: Ошибка выбора нового имени бота', e);
         }
@@ -115,14 +115,16 @@ ${vacations}`;
     }
 
     async chooseHost() {
-        const isDayOff = await dayOffService.isDayOff();
-        if (!isDayOff) {
-            const how = dayOffService.dayOfWeek === 5 ? 'В понедельник' : 'Завтра';
-
-            try {
+        try {
+            const isTodayDayOff = await dayOffService.checkDateDayOff(new Date());
+            if (!isTodayDayOff) {
+                const how = await dayOffService.how();
                 const randomHost = await hostsService.randomHost();
+
                 if (randomHost) {
-                    await this.bot.sendMessage(process.env.CHAT_ID, `${how} дейли ведёт @${randomHost.user_name}`);
+                    await this.bot.sendMessage(process.env.CHAT_ID, `${how} дейли ведёт @${randomHost.user_name}`, {
+                        parse_mode: 'HTML'
+                    });
                     if (randomHost.user_name === process.env.EASTER_EGG_NICKNAME) {
                         await this.bot.sendSticker(process.env.CHAT_ID, paths.stickers.easterEgg);
                         await this.bot.sendVoice(process.env.CHAT_ID, paths.voices.easterEgg);
@@ -130,9 +132,10 @@ ${vacations}`;
                         await this.bot.sendSticker(process.env.CHAT_ID, paths.stickers.host);
                     }
                 }
-            } catch (e) {
-                console.log('GeneralService: Ошибка отправки сообщения, выбранного ведущего дейли', e);
             }
+
+        } catch (e) {
+            console.log('GeneralService: Ошибка отправки сообщения, выбранного ведущего дейли', e);
         }
     }
 
