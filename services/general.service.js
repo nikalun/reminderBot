@@ -44,7 +44,7 @@ class GeneralService {
                 parse_mode: 'HTML',
             })
             await this.bot.setMyName({ name: `Выбери ${maxObj.first_name} ведущим` });
-            await this.bot.sendSticker(process.env.CHAT_ID, );
+            await this.bot.sendSticker(process.env.CHAT_ID, 'CAACAgIAAxkBAAIURmjS_tqTtz7JwCBcM9krif_OmHEzAAIzFAACh8YhSLgqPYszxtqjNgQ');
         } catch (e) {
             console.log('GeneralService: Ошибка выбора нового имени бота', e);
         }
@@ -52,28 +52,31 @@ class GeneralService {
 
     async daily() {
         try {
-            const teamList = await hostsService.hostsWithoutVacations();
-            const data = await this.onVacationUsersData();
+            const isTodayDayOff = await dayOffService.checkDateDayOff(new Date());
+            if (!isTodayDayOff) {
+                const teamList = await hostsService.hostsWithoutVacations();
+                const data = await this.onVacationUsersData();
 
-            const onVacationString = data
-                .map((item) => {
-                    const emoji = getRandomVacationEmoji();
-                    return `${emoji} ${escapeMarkdown(item.name)}\n`;
-                })
-                .join('');
+                const onVacationString = data
+                    .map((item) => {
+                        const emoji = getRandomVacationEmoji();
+                        return `${emoji} ${escapeMarkdown(item.name)}\n`;
+                    })
+                    .join('');
 
-            const teamString = teamList.map(item => `@${escapeMarkdown(item.user_name)}`).join(', ');
-            const vacations = onVacationString.length ? `🌴 *Сегодня в отпуске:*\n\n${onVacationString}` : '';
+                const teamString = teamList.map(item => `@${escapeMarkdown(item.user_name)}`).join(', ');
+                const vacations = onVacationString.length ? `🌴 *Сегодня в отпуске:*\n\n${onVacationString}` : '';
 
-            const message = `☀️${escapeMarkdown("Доброе утро!")}\n
+                const message = `☀️${escapeMarkdown("Доброе утро!")}\n
 🔗 *[Дейли](${escapeMarkdown(process.env.DAILY_URL)})*\n
 ${teamString}\n
 ${vacations}`;
 
-            await this.bot.sendMessage(process.env.CHAT_ID, message, {
-                parse_mode: 'MarkdownV2'
-            });
-            await this.bot.sendSticker(process.env.CHAT_ID, paths.stickers.dailyRandomSticker);
+                await this.bot.sendMessage(process.env.CHAT_ID, message, {
+                    parse_mode: 'MarkdownV2'
+                });
+                await this.bot.sendSticker(process.env.CHAT_ID, paths.stickers.dailyRandomSticker);
+            }
         } catch (e) {
             console.log('GeneralService: Ошибка отправки сообщения о том, что нужно идти на дейли', e);
         }
@@ -81,30 +84,34 @@ ${vacations}`;
 
     async youAreHost() {
         try {
-            const currentHost = await hostsService.prevHost();
-            await this.bot.sendMessage(process.env.CHAT_ID, `⚡️Сегодня дейли ведёт @${currentHost[0].user_name}`);
+            const isTodayDayOff = await dayOffService.checkDateDayOff(new Date());
 
-            if (!fs.existsSync(paths.stickers.hello)) {
-                console.error('❌ Гифка не найдена по пути:', paths.stickers.hello);
-                return;
-            }
+            if (!isTodayDayOff) {
+                const currentHost = await hostsService.prevHost();
+                await this.bot.sendMessage(process.env.CHAT_ID, `⚡️Сегодня дейли ведёт @${currentHost[0].user_name}`);
 
-            const gifStream = fs.createReadStream(paths.stickers.hello);
-
-            gifStream.on('open', async () => {
-                try {
-                    await this.bot.sendAnimation(currentHost[0].user_id, gifStream, {
-                        caption: 'Бу! Ты сегодня ведущий.',
-                    });
-                    console.log('✅ Пользователь успешно уведомлён');
-                } catch (err) {
-                    console.error('❌ Ошибка уведомления пользователя:', err);
+                if (!fs.existsSync(paths.stickers.hello)) {
+                    console.error('❌ Гифка не найдена по пути:', paths.stickers.hello);
+                    return;
                 }
-            });
 
-            gifStream.on('error', (err) => {
-                console.error('❌ Ошибка чтения файла гифки:', err);
-            });
+                const gifStream = fs.createReadStream(paths.stickers.hello);
+
+                gifStream.on('open', async () => {
+                    try {
+                        await this.bot.sendAnimation(currentHost[0].user_id, gifStream, {
+                            caption: 'Бу! Ты сегодня ведущий.',
+                        });
+                        console.log('✅ Пользователь успешно уведомлён');
+                    } catch (err) {
+                        console.error('❌ Ошибка уведомления пользователя:', err);
+                    }
+                });
+
+                gifStream.on('error', (err) => {
+                    console.error('❌ Ошибка чтения файла гифки:', err);
+                });
+            }
         } catch (e) {
             console.log(`GeneralService: Ошибка отправки сообщения пользователю, что он ведущий - ${e}`);
         }
@@ -141,7 +148,10 @@ ${vacations}`;
 
     async closeTasks() {
         try {
-            await this.bot.sendMessage(process.env.CHAT_ID, closeTasksText, { parse_mode: 'HTML' });
+            const isTodayDayOff = await dayOffService.checkDateDayOff(new Date());
+            if (!isTodayDayOff) {
+                await this.bot.sendMessage(process.env.CHAT_ID, closeTasksText, { parse_mode: 'HTML' });
+            }
         } catch (e) {
             console.log('GeneralService: Ошибка отправки сообщения о том, что нужно закрыть задачи', e);
         }

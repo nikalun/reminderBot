@@ -81,4 +81,5 @@ module.exports = {
     escapeMarkdown,
     isTodayBetween,
     getRandomVacationEmoji,
+    parseDateDMY,
 }
