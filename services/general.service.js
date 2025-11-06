@@ -185,9 +185,24 @@ ${vacations}`;
         return data;
     }
 
-    async deleteHostPermanently(userId) {
+    async deleteHostPermanently(userId, chatId, name) {
         try {
             await dataBaseService.deleteHostPermanently(userId);
+            const text = `Пользователь ${name} был удалён из списка ведущих. Благодарим за службу!`;
+            const sticker = paths.stickers.pressF;
+            if (chatId === Number(process.env.CHAT_ID)) {
+                // Отправляем в общий чат
+                await this.bot.sendMessage(process.env.CHAT_ID, text);
+                await this.bot.sendSticker(process.env.CHAT_ID, sticker);
+            } else {
+                // Отправляем в общий чат
+                await this.bot.sendMessage(process.env.CHAT_ID, text);
+                await this.bot.sendSticker(process.env.CHAT_ID, sticker);
+
+                // Отправляем в личку
+                await this.bot.sendMessage(chatId, text);
+                await this.bot.sendSticker(chatId, sticker);
+            }
         } catch (e) {
             console.log('GeneralService: Ошибка удаления ведущего ' + e);
         }

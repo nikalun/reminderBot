@@ -8,6 +8,7 @@ const paths = {
     stickers: {
         host: 'CAACAgIAAxkBAAIYHGjmq1hQ2wpLmKV8d6nllR5P779RAALPeAACmL-ZSsHmbzOxuLSuNgQ',
         newBotName: 'CAACAgIAAxkBAAIURmjS_tqTtz7JwCBcM9krif_OmHEzAAIzFAACh8YhSLgqPYszxtqjNgQ',
+        pressF: 'CAACAgIAAxkBAAIafmkM0mSfcDo5EtMdfrwLf5mKEXF4AAKwAANOm2QCV6vQZWcfLMY2BA',
         hello: `${stickers}/boo.gif`,
         iDontCallYou: `${stickers}/i_dont_call_you.webp`,
         daily: `${stickers}/daily`,

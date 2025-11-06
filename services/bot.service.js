@@ -28,6 +28,10 @@ const commands = [
         description: "добавиться к боту в список, для ведения дейли"
     },
     {
+        command: "delete",
+        description: "удалиться из списка ведущих дейли"
+    },
+    {
         command: "vacation",
         description: "Пойти в отпуск"
     },
@@ -103,6 +107,14 @@ class BotService {
                     case 'add': {
                         if (!isChatGroup) {
                             await this._add(msg);
+                        } else {
+                            await this.bot.sendMessage(msg.chat.id, 'Эта команда работает только в личном чате со мной.');
+                        }
+                        break;
+                    }
+                    case 'delete': {
+                        if (!isChatGroup) {
+                            await this._delete(msg);
                         } else {
                             await this.bot.sendMessage(msg.chat.id, 'Эта команда работает только в личном чате со мной.');
                         }
@@ -232,9 +244,7 @@ class BotService {
             const encodeData = decodeCallbackData(data);
 
             if (encodeData) {
-                await generalService.deleteHostPermanently(encodeData.user_id);
-                await this.bot.sendMessage(process.env.CHAT_ID, `Пользователь ${encodeData.name} был удалён из списка ведущих. Благодарим за службу!`);
-                await this.bot.sendSticker(process.env.CHAT_ID, 'CAACAgIAAxkBAAIafmkM0mSfcDo5EtMdfrwLf5mKEXF4AAKwAANOm2QCV6vQZWcfLMY2BA');
+                await generalService.deleteHostPermanently(encodeData.user_id, query.message.chat.id, encodeData.name);
             }
         } catch (e) {
             console.log(`Ошиба удаления пользователя из ведущих ${e}`);
@@ -331,6 +341,18 @@ class BotService {
         this.endDate = '';
     }
 
+    async _delete(msg) {
+        try {
+            const from = msg.from;
+            const firstName = `${from.first_name} ` ?? '';
+            const lastName = `${from.last_name} ` ?? '';
+            const name = `${firstName}${lastName}(@${msg.from.username})`
+            await generalService.deleteHostPermanently(msg.from.id, msg.chat.id, name);
+        } catch (e) {
+            console.log(`Ошибка удаления пользователя из списка ведущих ${e}`);
+        }
+    }
+
     async _add(msg) {
         const username = msg.from.username;
         try {
@@ -348,7 +370,7 @@ class BotService {
 
             await hostsService.setHost(userId, username, chatId, firstName, lastName);
 
-            if (msg.chat.id === process.env.CHAT_ID) {
+            if (msg.chat.id === Number(process.env.CHAT_ID)) {
                 await this.bot.sendMessage(msg.chat.id, `Пользователь с ником @${username} добавлен в список ведущих дейли`);
             } else {
                 await this.bot.sendMessage(msg.chat.id, `Пользователь с ником @${username} добавлен в список ведущих дейли`);
