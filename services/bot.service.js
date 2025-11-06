@@ -81,9 +81,6 @@ class BotService {
     }
 
     commandProcessing() {
-        this.bot.on('message', async (msg) => {
-            console.log(msg)
-        });
         this.bot.on('text', async msg => {
             const chatType = msg.chat.type;
             const text = msg.text ?? '';
