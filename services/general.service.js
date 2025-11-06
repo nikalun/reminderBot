@@ -184,6 +184,14 @@ ${vacations}`;
 
         return data;
     }
+
+    async deleteHostPermanently(userId) {
+        try {
+            await dataBaseService.deleteHostPermanently(userId);
+        } catch (e) {
+            console.log('GeneralService: Ошибка удаления ведущего ' + e);
+        }
+    }
 }
 
 module.exports = GeneralService;

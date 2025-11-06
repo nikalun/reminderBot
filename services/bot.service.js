@@ -42,7 +42,7 @@ const commands = [
 ];
 
 const adminKeyboard = [
-    ['Оповестить о дейли', 'Выбрать ведущего', 'Удалить отпуск', 'Переименовать бота', 'Обнулить hosted_daily'],
+    ['Оповестить о дейли', 'Выбрать ведущего', 'Удалить отпуск', 'Переименовать бота', 'Обнулить hosted_daily', 'Удалить пользователя'],
 ];
 const dailyAlertKeyboard = [
     ['Всех', 'Ведущего'],
@@ -76,6 +76,9 @@ class BotService {
     }
 
     commandProcessing() {
+        this.bot.on('message', async (msg) => {
+            console.log(msg)
+        });
         this.bot.on('text', async msg => {
             const chatType = msg.chat.type;
             const text = msg.text ?? '';
@@ -185,6 +188,10 @@ class BotService {
                         await generalService.resetFieldHostedDaily();
                         break;
                     }
+                    case 'Удалить пользователя': {
+                        await this._deleteHostMarkup(msg);
+                        break;
+                    }
                     default:
                         break;
                 }
@@ -208,9 +215,29 @@ class BotService {
             switch (true) {
                 case /^delete_vacation:/.test(query.data): {
                     await this._deleteVacation(query);
+                    break;
+                }
+                case /^delete_host:/.test(query.data): {
+                    await this._deleteHost(query);
+                    break;
                 }
             }
         })
+    }
+
+    async _deleteHost(query) {
+        try {
+            const [_, data] = query.data.split(':');
+            const encodeData = decodeCallbackData(data);
+
+            if (encodeData) {
+                await generalService.deleteHostPermanently(encodeData.user_id);
+                await this.bot.sendMessage(process.env.CHAT_ID, `Пользователь ${encodeData.name} был удалён из списка ведущих. Благодарим за службу!`);
+                await this.bot.sendSticker(process.env.CHAT_ID, 'CAACAgIAAxkBAAIafmkM0mSfcDo5EtMdfrwLf5mKEXF4AAKwAANOm2QCV6vQZWcfLMY2BA');
+            }
+        } catch (e) {
+            console.log(`Ошиба удаления пользователя из ведущих ${e}`);
+        }
     }
 
     async _checkMember(msg) {
@@ -361,6 +388,37 @@ class BotService {
         }
     }
 
+    async _deleteHostMarkup(msg) {
+        try {
+            const hosts = await dataBaseService.getHosts();
+
+            const preparedHosts = [];
+
+            for (const item of hosts) {
+                const firstName = item.first_name ? item.first_name : '';
+                const lastName = item.last_name ? item.last_name : '';
+                const name = `${firstName} ${lastName} (@${item.user_name})`;
+
+                preparedHosts.push({ name, data: { user_id: item.user_id }, });
+            }
+
+            const users = preparedHosts.map(item => ({
+                text: item.name,
+                callback_data: `delete_host:${encodeCallbackData({ name: item.name, ...item.data })}`
+            }));
+
+            const options = {
+                reply_markup: {
+                    inline_keyboard: users.map(u => [u]),
+                }
+            };
+
+            await this.bot.sendMessage(msg.chat.id, 'Выбери, кого хочешь удалить из ведущих', options);
+        } catch (e) {
+            console.log('Ошибка формирования маркапа для удаления пользователя из ведущих ' + e);
+        }
+    }
+
     async _deleteVacationMarkup(msg) {
         const vacations = await generalService.getVacations();
 
@@ -383,7 +441,7 @@ class BotService {
 
             const options = {
                 reply_markup: {
-                    inline_keyboard: [users]
+                    inline_keyboard: users.map(u => [u]),
                 }
             };
 

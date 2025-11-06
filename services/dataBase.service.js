@@ -6,15 +6,20 @@ const filepath = path.join(__dirname, '..', 'db', process.env.DATA_BASE_NAME);
 
 const SQLRequests = new Map([
     ['insertVacation', `INSERT INTO vacation (user_id, user_name, start_date, end_date) VALUES (?, ?, ?, ?)`],
-    ['deleteVacation', `DELETE FROM vacation WHERE user_id = ? AND end_date = ?`],
-    ['selectVacations', `SELECT * FROM vacation`],
     ['insertHost', `INSERT INTO hosts (user_id, user_name, chat_id) VALUES (?, ?, ?)`],
+
+    ['deleteVacation', `DELETE FROM vacation WHERE user_id = ? AND end_date = ?`],
+    ['deletePermanentlyHost', 'DELETE FROM hosts WHERE user_id = ?'],
+    ['deletePermanentlyVacation', 'DELETE FROM vacation WHERE user_id = ?'],
+
+    ['selectVacations', `SELECT * FROM vacation`],
     ['selectHosts', `SELECT * FROM hosts`],
+    ['selectHost', `SELECT * FROM hosts WHERE user_id = ?`],
+    ['selectHostIds', `SELECT user_id FROM hosts`],
+
     ['updatePrevHost', `UPDATE hosts SET prev_host = ? WHERE user_id = ?`],
     ['updateHostedDaily', `UPDATE hosts SET hosted_daily = ? WHERE user_id = ?`],
     ['enrichHost', `UPDATE hosts SET first_name = ?, last_name = ? WHERE user_id = ?`],
-    ['selectHost', `SELECT * FROM hosts WHERE user_id = ?`],
-    ['selectHostIds', `SELECT user_id FROM hosts`],
 ])
 
 class DataBaseService {
@@ -58,6 +63,13 @@ class DataBaseService {
         return await get(SQLRequests.get('selectHost'), [userId]);
     }
 
+    async deleteHostPermanently(userId) {
+        return await this._transactionAsync(async () => {
+           await this._run(SQLRequests.get('deletePermanentlyHost'), [userId]);
+           await this._run(SQLRequests.get('deletePermanentlyVacation'), [userId]);
+        });
+    }
+
     async getHosts() {
         const all = this._all();
         return await all(SQLRequests.get('selectHosts'));
@@ -93,6 +105,18 @@ class DataBaseService {
                 else resolve(this);
             });
         });
+    }
+
+    async  _transactionAsync(callback) {
+        try {
+            await this._run('BEGIN TRANSACTION');
+            const result = await callback();
+            await this._run('COMMIT');
+            return result;
+        } catch (err) {
+            await this._run('ROLLBACK');
+            throw err;
+        }
     }
 }
 

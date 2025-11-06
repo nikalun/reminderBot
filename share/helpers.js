@@ -9,9 +9,10 @@ emojis = ["🏖️", "🍹", "🌊", "🕶️", "🌺", "☀️", "🌴", "🍍"
  */
 function encodeCallbackData(obj) {
     const json = JSON.stringify(obj);
+    const encoded = Buffer.from(json).toString('base64url');
 
     // Если json помещается в лимит Telegram (64 байта) — возвращаем напрямую
-    if (Buffer.byteLength(json, "utf8") <= 64) {
+    if (encoded <= 64) {
         return json;
     }
 
