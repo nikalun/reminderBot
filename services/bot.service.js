@@ -42,7 +42,8 @@ const commands = [
 ];
 
 const adminKeyboard = [
-    ['Оповестить о дейли', 'Выбрать ведущего', 'Удалить отпуск', 'Переименовать бота', 'Обнулить hosted_daily', 'Удалить пользователя'],
+    ['Оповестить о дейли', 'Выбрать ведущего', 'Удалить отпуск'],
+    ['Переименовать бота', 'Обнулить hosted_daily', 'Удалить пользователя']
 ];
 const dailyAlertKeyboard = [
     ['Всех', 'Ведущего'],
@@ -85,7 +86,7 @@ class BotService {
 
             const match = text.match(regex);
             const isCommand = match?.[1]
-                || adminKeyboard[0].includes(text)
+                || adminKeyboard.flat().some(item => item.includes(text))
                 || dailyAlertKeyboard[0].includes(text)
                 || dailyAlertKeyboard[1].includes(text);
             const isMember = this._checkMember(msg);
