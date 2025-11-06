@@ -1,8 +1,8 @@
 const dataBaseService = require('./dataBase.service');
 
 class HostsService {
-    async setHost(userId, userName, chatId) {
-        return await dataBaseService.setHost(userId, userName, chatId);
+    async setHost(userId, userName, chatId, firstName, lastName) {
+        return await dataBaseService.setHost(userId, userName, chatId, firstName, lastName);
     }
 
     async setPrevHost(userId, value) {

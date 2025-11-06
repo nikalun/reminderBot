@@ -336,6 +336,8 @@ class BotService {
         try {
             const userId = msg.from.id;
             const chatId = msg.chat.id;
+            const firstName = msg.from.first_name ?? '';
+            const lastName = msg.from.last_name ?? '';
 
             const host = await hostsService.findHost(userId);
 
@@ -344,7 +346,7 @@ class BotService {
                 return;
             }
 
-            await hostsService.setHost(userId, username, chatId);
+            await hostsService.setHost(userId, username, chatId, firstName, lastName);
 
             if (msg.chat.id === process.env.CHAT_ID) {
                 await this.bot.sendMessage(msg.chat.id, `Пользователь с ником @${username} добавлен в список ведущих дейли`);

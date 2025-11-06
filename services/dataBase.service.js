@@ -6,7 +6,7 @@ const filepath = path.join(__dirname, '..', 'db', process.env.DATA_BASE_NAME);
 
 const SQLRequests = new Map([
     ['insertVacation', `INSERT INTO vacation (user_id, user_name, start_date, end_date) VALUES (?, ?, ?, ?)`],
-    ['insertHost', `INSERT INTO hosts (user_id, user_name, chat_id) VALUES (?, ?, ?)`],
+    ['insertHost', `INSERT INTO hosts (user_id, user_name, chat_id, first_name, last_name) VALUES (?, ?, ?, ?, ?)`],
 
     ['deleteVacation', `DELETE FROM vacation WHERE user_id = ? AND end_date = ?`],
     ['deletePermanentlyHost', 'DELETE FROM hosts WHERE user_id = ?'],
@@ -33,8 +33,8 @@ class DataBaseService {
         console.log('Успешное соединение с базой данных');
     }
 
-    async setHost(userId, username, chatId) {
-        const run = this._run(SQLRequests.get('insertHost'), [userId, username, chatId]);
+    async setHost(userId, username, chatId, firstName, lastName) {
+        const run = this._run(SQLRequests.get('insertHost'), [userId, username, chatId, firstName, lastName]);
         return await run;
     }
 
