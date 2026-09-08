@@ -50,6 +50,15 @@ class JobsService {
          });
      }
 
+    closeTasksSecond() {
+        return cronService.createJob({
+            cronTime: process.env.CLOSE_TASKS_TIME_SECOND,
+            onTick: () => generalService.closeTasksSecond(),
+            start: true,
+            timeZone: 'Europe/Moscow',
+        });
+    }
+
      deleteOldVacations() {
          return cronService.createJob({
              cronTime: process.env.DELETE_OLD_VACATIONS,

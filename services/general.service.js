@@ -23,6 +23,8 @@ const closeTasksText = `
 Ты закрываешь задачи - ИТ лид счастлив. Ты этого не делаешь - ИТ лид делает тебе попаболь!
 `;
 
+const closeTaskSecondText = 'Задачи все закрыли?)';
+
 class GeneralService {
     bot = undefined;
 
@@ -154,6 +156,21 @@ ${vacations}`;
             }
         } catch (e) {
             console.log('GeneralService: Ошибка отправки сообщения о том, что нужно закрыть задачи', e);
+        }
+    }
+
+    async closeTasksSecond() {
+        try {
+            const isTodayDayOff = await dayOffService.checkDateDayOff(new Date());
+            if (!isTodayDayOff) {
+                const teamList = await hostsService.hostsWithoutVacations();
+                const teamString = teamList.map(item => `@${escapeMarkdown(item.user_name)}`).join(', ');
+
+                await this.bot.sendSticker(process.env.CHAT_ID, 'AAMCAgADGQEAAS6GmGqgKNJbYB6nazdDgVGdkipg7IluAALSCgACWGfxSm7OW4LXjQrsAQAHbQADPQQQ');
+                await this.bot.sendMessage(process.env.CHAT_ID, `${closeTaskSecondText}\n${teamString}`, { parse_mode: 'HTML' });
+            }
+        } catch (e) {
+            console.log('GeneralService: Ошибка отправки второго сообщения о том, что нужно закрыть задачи', e);
         }
     }
 
