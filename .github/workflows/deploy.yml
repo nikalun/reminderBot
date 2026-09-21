@@ -20,7 +20,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: 22
           script: |
-            cd /var/www/reminder-bot
+            cd /var/www/reminderBot
             git fetch origin develop
             git reset --hard origin/develop
             
