@@ -166,7 +166,7 @@ ${vacations}`;
                 const teamList = await hostsService.hostsWithoutVacations();
                 const teamString = teamList.map(item => `@${escapeMarkdown(item.user_name)}`).join(', ');
 
-                await this.bot.sendSticker(process.env.CHAT_ID, 'AAMCAgADGQEAAS6GmGqgKNJbYB6nazdDgVGdkipg7IluAALSCgACWGfxSm7OW4LXjQrsAQAHbQADPQQQ');
+                await this.bot.sendSticker(process.env.CHAT_ID, 'CAACAgIAAxkBAAEuhphqoCjSW2Aep2s3Q4FRnZIqYOyJbgAC0goAAlhn8UpuzluC140K7D0E');
                 await this.bot.sendMessage(process.env.CHAT_ID, `${closeTaskSecondText}\n${teamString}`, { parse_mode: 'HTML' });
             }
         } catch (e) {
