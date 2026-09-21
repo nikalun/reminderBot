@@ -39,6 +39,7 @@ jobs:
             DAILY_TIME='${{ secrets.DAILY_TIME }}'
             CHOOSE_HOST_TIME='${{ secrets.CHOOSE_HOST_TIME }}'
             CLOSE_TASKS_TIME='${{ secrets.CLOSE_TASKS_TIME }}'
+            CLOSE_TASKS_TIME_SECOND='${{ secrets.CLOSE_TASKS_TIME_SECOND }}'
             DELETE_OLD_VACATIONS='${{ secrets.DELETE_OLD_VACATIONS }}'
             DUTY_REMINDER_TIME='${{ secrets.DUTY_REMINDER_TIME }}'
             CHOOSE_NEW_BOT_NAME_TIME='${{ secrets.CHOOSE_NEW_BOT_NAME_TIME }}'

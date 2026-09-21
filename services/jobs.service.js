@@ -15,6 +15,9 @@ class JobsService {
     }
 
     dailyJob() {
+        console.log('-------');
+        console.log(JSON.stringify(process.env.DAILY_TIME));
+        console.log('-------');
         return cronService.createJob({
             cronTime: process.env.DAILY_TIME,
             onTick: () => generalService.daily(),
