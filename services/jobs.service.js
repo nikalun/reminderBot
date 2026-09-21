@@ -12,16 +12,6 @@ const generalService = new GeneralService();
 class JobsService {
     constructor() {
         generalService.setBot(botService.bot);
-
-        console.log({
-            DAILY_TIME: process.env.DAILY_TIME,
-            CHOOSE_HOST_TIME: process.env.CHOOSE_HOST_TIME,
-            CLOSE_TASKS_TIME: process.env.CLOSE_TASKS_TIME,
-            CLOSE_TASKS_TIME_SECOND: process.env.CLOSE_TASKS_TIME_SECOND,
-            DELETE_OLD_VACATIONS: process.env.DELETE_OLD_VACATIONS,
-            DUTY_REMINDER_TIME: process.env.DUTY_REMINDER_TIME,
-            CHOOSE_NEW_BOT_NAME_TIME: process.env.CHOOSE_NEW_BOT_NAME_TIME,
-        });
     }
 
     dailyJob() {

@@ -33,7 +33,6 @@ jobs:
             ADMIN_ID=${{ secrets.ADMIN_ID }}
             CHAT_ID=${{ secrets.CHAT_ID }}
             DAILY_URL=${{ secrets.DAILY_URL }}
-            EASTER_EGG_NICKNAME=${{ secrets.EASTER_EGG_NICKNAME }}
             
             # Оборачиваем крон-тайминги в одинарные кавычки для Node.js:
             DAILY_TIME='${{ secrets.DAILY_TIME }}'
