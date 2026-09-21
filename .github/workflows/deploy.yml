@@ -25,7 +25,8 @@ jobs:
             git reset --hard origin/master
             
             echo "Generating .env file..."
-            cat << 'EOF' > .env
+            # Используем стандартный EOF, но секреты оборачиваем в одинарные кавычки
+            cat << EOF > .env
             PATH_TO_DB=${{ secrets.PATH_TO_DB }}
             DATA_BASE_NAME=${{ secrets.DATA_BASE_NAME }}
             API_KEY_BOT=${{ secrets.API_KEY_BOT }}
@@ -33,14 +34,16 @@ jobs:
             CHAT_ID=${{ secrets.CHAT_ID }}
             DAILY_URL=${{ secrets.DAILY_URL }}
             EASTER_EGG_NICKNAME=${{ secrets.EASTER_EGG_NICKNAME }}
-            DAILY_TIME=${{ secrets.DAILY_TIME }}
-            CHOOSE_HOST_TIME=${{ secrets.CHOOSE_HOST_TIME }}
-            CLOSE_TASKS_TIME=${{ secrets.CLOSE_TASKS_TIME }}
-            DELETE_OLD_VACATIONS=${{ secrets.DELETE_OLD_VACATIONS }}
-            DUTY_REMINDER_TIME=${{ secrets.DUTY_REMINDER_TIME }}
-            CHOOSE_NEW_BOT_NAME_TIME=${{ secrets.CHOOSE_NEW_BOT_NAME_TIME }}
+            
+            # Оборачиваем крон-тайминги в одинарные кавычки для Node.js:
+            DAILY_TIME='${{ secrets.DAILY_TIME }}'
+            CHOOSE_HOST_TIME='${{ secrets.CHOOSE_HOST_TIME }}'
+            CLOSE_TASKS_TIME='${{ secrets.CLOSE_TASKS_TIME }}'
+            DELETE_OLD_VACATIONS='${{ secrets.DELETE_OLD_VACATIONS }}'
+            DUTY_REMINDER_TIME='${{ secrets.DUTY_REMINDER_TIME }}'
+            CHOOSE_NEW_BOT_NAME_TIME='${{ secrets.CHOOSE_NEW_BOT_NAME_TIME }}'
             EOF
-  
+            
             # Вот эти команды должны идти СТРОГО ПОСЛЕ закрывающего EOF
             echo "Preparing DB directory..."
             mkdir -p ${{ secrets.PATH_TO_DB }}
