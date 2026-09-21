@@ -1,7 +1,14 @@
-FROM node:18.10.0
+FROM node:18.10.0-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 COPY . .
-EXPOSE 3000
+
+FROM node:18.10.0-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+COPY package*.json ./
+RUN npm ci --only=production
+COPY --from=builder /app ./
+USER node
 CMD ["node", "index.js"]

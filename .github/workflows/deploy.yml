@@ -1,0 +1,51 @@
+name: CI/CD Deploy Reminder Bot
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: 22
+          script: |
+            cd /var/www/reminder-bot
+            git fetch origin develop
+            git reset --hard origin/develop
+            
+            echo "Generating .env file..."
+            cat << EOF > .env
+            PATH_TO_DB=${{ secrets.PATH_TO_DB }}
+            DATA_BASE_NAME=${{ secrets.DATA_BASE_NAME }}
+            API_KEY_BOT=${{ secrets.API_KEY_BOT }}
+            ADMIN_ID=${{ secrets.ADMIN_ID }}
+            DAILY_TIME=${{ secrets.DAILY_TIME }}
+            CHOOSE_HOST_TIME=${{ secrets.CHOOSE_HOST_TIME }}
+            CLOSE_TASKS_TIME=${{ secrets.CLOSE_TASKS_TIME }}
+            CLOSE_TASKS_TIME_SECOND=${{ secrets.CLOSE_TASKS_TIME_SECOND }}
+            DELETE_OLD_VACATIONS=${{ secrets.DELETE_OLD_VACATIONS }}
+            CHAT_ID=${{ secrets.CHAT_ID }}
+            DAILY_URL=${{ secrets.DAILY_URL }}
+            DUTY_REMINDER_TIME=${{ secrets.DUTY_REMINDER_TIME }}
+            CHOOSE_NEW_BOT_NAME_TIME=${{ secrets.CHOOSE_NEW_BOT_NAME_TIME }}
+            EOF
+            
+            echo "Preparing DB directory..."
+            mkdir -p ${{ secrets.PATH_TO_DB }}
+            
+            echo "Rebuilding and restarting docker compose..."
+            docker compose up -d --build
+            
+            echo "Cleaning up dangling images..."
+            docker image prune -f

@@ -6,7 +6,7 @@ services:
       - "3000:3000"
     restart: unless-stopped
     volumes:
-      - ${PATH_TO_DB}:/app/db/
+      - ${PATH_TO_DB}:/var/www/db/
     environment:
       - API_KEY_BOT=${API_KEY_BOT}
       - ADMIN_ID=${ADMIN_ID}
