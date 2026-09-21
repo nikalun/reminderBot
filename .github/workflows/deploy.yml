@@ -21,8 +21,8 @@ jobs:
           port: 22
           script: |
             cd /var/www/reminderBot
-            git fetch origin develop
-            git reset --hard origin/develop
+            git fetch origin master
+            git reset --hard origin/master
             
             echo "Generating .env file..."
             cat << EOF > .env
