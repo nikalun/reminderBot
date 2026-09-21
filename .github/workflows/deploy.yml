@@ -25,7 +25,6 @@ jobs:
             git reset --hard origin/master
             
             echo "Generating .env file..."
-            # ОДИНАРНЫЕ КАВЫЧКИ ВОКРУГ 'EOF' — ЭТО КЛЮЧЕВОЙ МОМЕНТ!
             cat << 'EOF' > .env
             PATH_TO_DB=${{ secrets.PATH_TO_DB }}
             DATA_BASE_NAME=${{ secrets.DATA_BASE_NAME }}
@@ -40,13 +39,14 @@ jobs:
             DELETE_OLD_VACATIONS=${{ secrets.DELETE_OLD_VACATIONS }}
             DUTY_REMINDER_TIME=${{ secrets.DUTY_REMINDER_TIME }}
             CHOOSE_NEW_BOT_NAME_TIME=${{ secrets.CHOOSE_NEW_BOT_NAME_TIME }}
-            EOF          
-            
+            EOF
+  
+            # Вот эти команды должны идти СТРОГО ПОСЛЕ закрывающего EOF
             echo "Preparing DB directory..."
             mkdir -p ${{ secrets.PATH_TO_DB }}
-            
+  
             echo "Rebuilding and restarting docker compose..."
             docker compose up -d --build
-            
+  
             echo "Cleaning up dangling images..."
             docker image prune -f
