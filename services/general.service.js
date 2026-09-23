@@ -167,7 +167,7 @@ ${vacations}`;
                 const teamString = teamList.map(item => `@${escapeMarkdown(item.user_name)}`).join(', ');
 
                 await this.bot.sendSticker(process.env.CHAT_ID, 'CAACAgIAAxkBAAEuhphqoCjSW2Aep2s3Q4FRnZIqYOyJbgAC0goAAlhn8UpuzluC140K7D0E');
-                await this.bot.sendMessage(process.env.CHAT_ID, `${closeTaskSecondText}\n${teamString}`, { parse_mode: 'HTML' });
+                await this.bot.sendMessage(process.env.CHAT_ID, `${closeTaskSecondText}\n${teamString}`, { parse_mode: 'MarkdownV2' });
             }
         } catch (e) {
             console.log('GeneralService: Ошибка отправки второго сообщения о том, что нужно закрыть задачи', e);
